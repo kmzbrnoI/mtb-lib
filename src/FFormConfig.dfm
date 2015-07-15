@@ -28,7 +28,7 @@ object FormConfig: TFormConfig
     Margins.Top = 2
     Margins.Right = 2
     Margins.Bottom = 2
-    ActivePage = TS_Device
+    ActivePage = TS_Modules
     Align = alClient
     TabOrder = 0
     object TS_Device: TTabSheet
@@ -38,6 +38,10 @@ object FormConfig: TFormConfig
       Margins.Bottom = 2
       Caption = 'P'#345'ipojen'#237
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object l_2: TLabel
         Left = 13
         Top = 62
@@ -73,7 +77,7 @@ object FormConfig: TFormConfig
         Width = 137
         Height = 21
         Style = csDropDownList
-        ItemHeight = 13
+        ItemHeight = 0
         TabOrder = 0
         OnChange = cb_mtbNameChange
       end
@@ -83,7 +87,7 @@ object FormConfig: TFormConfig
         Width = 137
         Height = 21
         Style = csDropDownList
-        ItemHeight = 13
+        ItemHeight = 0
         ItemIndex = 0
         TabOrder = 1
         Text = '38 400'
@@ -233,10 +237,6 @@ object FormConfig: TFormConfig
       Margins.Bottom = 2
       Caption = 'MTB moduly'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object l_3: TLabel
         Left = 10
         Top = 12
@@ -281,6 +281,15 @@ object FormConfig: TFormConfig
         TabOrder = 0
         ViewStyle = vsReport
         OnDblClick = lv_modulesDblClick
+      end
+      object B_DeleteNonExist: TButton
+        Left = 288
+        Top = 9
+        Width = 223
+        Height = 25
+        Caption = 'Vymazat konfiguraci neexistuj'#237'c'#237'ch modul'#367
+        TabOrder = 1
+        OnClick = B_DeleteNonExistClick
       end
     end
     object TS_Log: TTabSheet

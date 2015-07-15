@@ -5,7 +5,7 @@
 //  (c) Petr Travnik (petr.travnik@kmz-brno.cz),
 //      Jan Horacek (jan.horacek@kmz-brno.cz),
 //      Michal Petrilak (engineercz@gmail.com)
-// 30.05.2015
+// 15.07.2015
 ////////////////////////////////////////////////////////////////////////////////
 
 {
@@ -90,6 +90,7 @@ type
     CHB_LogOut: TCheckBox;
     CHB_LogIn: TCheckBox;
     CHB_Logging: TCheckBox;
+    B_DeleteNonExist: TButton;
     procedure b_ScanBrdClick(Sender: TObject);
     procedure b_ScanModClick(Sender: TObject);
     procedure lv_modulesDblClick(Sender: TObject);
@@ -123,6 +124,7 @@ type
     procedure CHB_LogOutClick(Sender: TObject);
     procedure CHB_LogInClick(Sender: TObject);
     procedure CHB_LoggingClick(Sender: TObject);
+    procedure B_DeleteNonExistClick(Sender: TObject);
   private
 
   public
@@ -409,13 +411,34 @@ begin
  Self.b_ScanBrd.Enabled  := true;
  Self.cb_mtbName.Enabled := true;
  FormModule.RefreshStates();
+end;
+
+// vyresetovat konfiguraci vsech modulu, ktere nebyly nalezeny
+// to je dobre napriklad pri prechodu na jine kolejiste
+procedure TFormConfig.B_DeleteNonExistClick(Sender: TObject);
+var i, j:Integer;
+begin
+ if (Application.MessageBox('Opravdu vyresetovat konfiguraci všech MTB modulù, které se nenachází v tabulce níže?', 'Opravdu', MB_YESNO OR MB_ICONQUESTION) <> mrYes) then Exit(); 
+
+ for i := 1 to _MTB_MAX_ADDR do
+  begin
+   if (not MTBdrv.IsModule(i)) then
+    begin
+     for j := 0 to 3 do
+       MTBdrv.WrCfgData.CFGdata[j] := 0;
+     MTBdrv.WrCfgData.CFGpopis := '';
+     MTBdrv.SetModuleCfg(i);
+    end;
+  end;//for i
+
+ Application.MessageBox('Konfigurace pøíslušných MTB modulù smazána', 'Hotovo', MB_OK OR MB_ICONINFORMATION);
 end;//procedure
 
 procedure TFormConfig.AfterStop(Sender:TObject);
 begin
  if (not Assigned(Self)) then Exit;
 
- Self.L_Started.Caption := 'zastavena';
+ Self.L_Started.Caption      := 'zastavena';
  Self.L_Started.Font.Color   := clRed;
  if (Assigned(Self.PrgEvents.prgAfterStop)) then Self.PrgEvents.prgAfterStop(Self);
 end;//procedure
