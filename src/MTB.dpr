@@ -150,6 +150,31 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
+// Get MTB module output port state.
+//  Result values: [0 - 1] : MTB-UNI, MTB-TTL standard outputs
+//                 SCom code for MTB-UNI SCom outputs
+
+function GetOutput(Module, Port: Integer): Integer; stdcall;
+var MTBport:TPortValue;
+begin
+  if ((Module < 1) or (Module > 255)) then Exit(-2);
+  if (not MTBdrv.IsModule(Module)) then Exit(-2);
+  if (MTBdrv.IsModuleFailure(Module)) then Exit(-2);
+  if ((port < 0) or (port > 15)) then Exit(-2);
+
+  MTBport := Module*16 + Port;
+  if (MTBdrv.IsScomOut(MTBport)) then
+    Result := MTBdrv.GetScomCode(MTBport)
+  else begin
+    case (MTBdrv.GetOutPort(MTBport)) of
+      false: Result := 0;
+      true : Result := 1;
+    end;//case
+  end;
+end;
+
+
+////////////////////////////////////////////////////////////////////////////////
 // Returns versions:
 
 function GetDeviceVersion:string; stdcall;
@@ -366,6 +391,7 @@ exports
   Stop name 'stop',
   GetInput name 'getinput',
   SetOutput name 'setoutput',
+  GetOutput name 'getoutput',
   ShowConfigDialog name 'showconfigdialog',
   HideConfigDialog name 'hideconfigdialog',
   ShowAboutDialog name 'showaboutdialog',

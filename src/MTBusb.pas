@@ -316,7 +316,6 @@ type
 
     procedure SetOutPort(Port: TPortValue; state: boolean);
     procedure SetInPort(Port: TPortValue; state: boolean);
-    function GetOutPort(Port: TPortValue): boolean;
 
     function GetRegOverValue(Port: TRegChann): TPortRegOver;
 
@@ -383,6 +382,7 @@ type
     function GetIModule(addr: TIOaddr): word;
     function GetOModule(addr: TIOaddr): word;
     procedure SetOModule(addr: TIOaddr; state: word);
+    function GetOutPort(Port: TPortValue): boolean;
 
     procedure SetOutPortFlick(Port: TPortValue; state: TFlickType);
     function GetOutPortFlick(Port: TPortValue): TFlickType;
