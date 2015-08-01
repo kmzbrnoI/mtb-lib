@@ -5,7 +5,7 @@
 //  (c) Petr Travnik (petr.travnik@kmz-brno.cz),
 //      Jan Horacek (jan.horacek@kmz-brno.cz),
 //      Michal Petrilak (engineercz@gmail.com)
-// 30.05.2015
+// 01.08.2015
 ////////////////////////////////////////////////////////////////////////////////
 
 {
@@ -111,16 +111,14 @@ end;
 ////////////////////////////////////////////////////////////////////////////////
 // Start/stop communication (device must be openned):
 
-function Start(): Integer; stdcall;
+procedure Start(); stdcall;
 begin
   MTBdrv.Start;
-  Result := 0;
 end;
 
-function Stop(): Integer; stdcall;
+procedure Stop(); stdcall;
 begin
   MTBdrv.Stop;
-  Result := 0;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -251,15 +249,6 @@ function SetMtbSpeed(Speed:Integer):Integer; stdcall;
  end;
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// not used in this version (saving in destructor or when
-//    setting the configuration of MTB)
-function SaveData:Integer; stdcall;
- begin
-  Result := 0;
- end;//procedure
-
-////////////////////////////////////////////////////////////////////////////////
 // Sets output
 
 function SetOutput(Module, Port, State: Integer): Integer; stdcall;
@@ -311,58 +300,59 @@ end;//function
 ////////////////////////////////////////////////////////////////////////////////
 // ----- setting callback events begin -----
 
-function SetBeforeOpen(ptr:TMyEvent):Integer; stdcall;
+procedure SetBeforeOpen(ptr:TStdNotifyEvent); stdcall;
 begin
  FormConfig.PrgEvents.prgBeforeOpen := ptr;
- Result := 0;
 end;//function
 
-function SetAfterOpen(ptr:TMyEvent):Integer; stdcall;
+procedure SetAfterOpen(ptr:TStdNotifyEvent); stdcall;
 begin
  FormConfig.PrgEvents.prgAfterOpen := ptr;
- Result := 0;
 end;//function
 
-function SetBeforeClose(ptr:TMyEvent):Integer; stdcall;
+procedure SetBeforeClose(ptr:TStdNotifyEvent); stdcall;
 begin
  FormConfig.PrgEvents.prgBeforeClose := ptr;
- Result := 0;
 end;//function
 
-function SetAfterClose(ptr:TMyEvent):Integer; stdcall;
+procedure SetAfterClose(ptr:TStdNotifyEvent); stdcall;
 begin
  FormConfig.PrgEvents.prgAfterClose := ptr;
- Result := 0;
 end;//function
 
-function SetBeforeStart(ptr:TMyEvent):Integer; stdcall;
+procedure SetBeforeStart(ptr:TStdNotifyEvent); stdcall;
 begin
  FormConfig.PrgEvents.prgBeforeStart := ptr;
- Result := 0;
 end;//function
 
-function SetAfterStart(ptr:TMyEvent):Integer; stdcall;
+procedure SetAfterStart(ptr:TStdNotifyEvent); stdcall;
 begin
  FormConfig.PrgEvents.prgAfterStart := ptr;
- Result := 0;
 end;//function
 
-function SetBeforeStop(ptr:TMyEvent):Integer; stdcall;
+procedure SetBeforeStop(ptr:TStdNotifyEvent); stdcall;
 begin
  FormConfig.PrgEvents.prgBeforeStop := ptr;
- Result := 0;
 end;//function
 
-function SetAfterStop(ptr:TMyEvent):Integer; stdcall;
+procedure SetAfterStop(ptr:TStdNotifyEvent); stdcall;
 begin
  FormConfig.PrgEvents.prgAfterStop := ptr;
- Result := 0;
 end;//function
 
-function SetOnError(ptr:TMyErrorEvent):Integer; stdcall;
+procedure SetOnError(ptr:TMyErrorEvent); stdcall;
 begin
  FormConfig.PrgEvents.prgError := ptr;
- Result := 0;
+end;//function
+
+procedure SetOnInputChange(ptr:TMyModuleChangeEvent); stdcall;
+begin
+ FormConfig.PrgEvents.prgInputChanged := ptr;
+end;//function
+
+procedure SetOnOutputChange(ptr:TMyModuleChangeEvent); stdcall;
+begin
+ FormConfig.PrgEvents.prgOutputChanged := ptr;
 end;//function
 
 // ----- setting callback events end -----
@@ -388,7 +378,6 @@ exports
   GetModuleName name 'getmodulename',
   SetModuleName name 'setmodulename',
   SetMtbSpeed name 'setmtbspeed',
-  SaveData name 'savedata',
   Open name 'open',
   Close name 'close',
   IsOpen name 'isopen',
@@ -403,7 +392,9 @@ exports
   SetAfterStart name 'setafterstart',
   SetBeforeStop name 'setbeforestop',
   SetAfterStop name 'setafterstop',
-  SetOnError name 'setonerror';
+  SetOnError name 'setonerror',
+  SetOnInputChange name 'setoninputchange',
+  SetOnOutputChange name 'setonoutputchange';
 
 begin
   MTBdrv := TMTBusb.Create(nil, 'mtb');

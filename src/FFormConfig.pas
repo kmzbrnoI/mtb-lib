@@ -42,21 +42,24 @@ uses
   FFormModule, ExtCtrls;
 
 type
-  TMyEvent  = function(Sender:TObject):Integer; stdcall;
   TMyErrorEvent = function (Sender: TObject; errValue: word; errAddr: byte; errMsg:string):Integer; stdcall;
+  TStdNotifyEvent = procedure (Sender: TObject) of object; stdcall;
+  TMyModuleChangeEvent = procedure (Sender: TObject; module: byte) of object; stdcall;
 
   TPrgEvents = record
-    prgBeforeOpen:TMyEvent;
-    prgAfterOpen:TMyEvent;
-    prgBeforeClose:TMyEvent;
-    prgAfterClose:TMyEvent;
+    prgBeforeOpen:TStdNotifyEvent;
+    prgAfterOpen:TStdNotifyEvent;
+    prgBeforeClose:TStdNotifyEvent;
+    prgAfterClose:TStdNotifyEvent;
 
-    prgBeforeStart:TMyEvent;
-    prgAfterStart:TMyEvent;
-    prgBeforeStop:TMyEvent;
-    prgAfterStop:TMyEvent;
+    prgBeforeStart:TStdNotifyEvent;
+    prgAfterStart:TStdNotifyEvent;
+    prgBeforeStop:TStdNotifyEvent;
+    prgAfterStop:TStdNotifyEvent;
 
     prgError:TMyErrorEvent;
+    prgInputChanged:TMyModuleChangeEvent;
+    prgOutputChanged:TMyModuleChangeEvent;
   end;
 
    TFormConfig = class(TForm)
@@ -105,6 +108,8 @@ type
     procedure OnScanned(Sender:TObject);
     procedure OnChange(Sender:TObject);
     procedure OnError(Sender: TObject; errValue: word; errAddr: byte);
+    procedure OnInputChanged(Sender: TObject; module: byte);
+    procedure OnOutputChanged(Sender: TObject; module: byte);
 
     procedure BeforeOpen(Sender:TObject);
     procedure AfterOpen(Sender:TObject);
@@ -275,9 +280,11 @@ begin
 
  Self.Caption := Self.Caption+'        v'+_VERSION;
 
- MTBdrv.OnChange    := Self.OnChange;
- MTBdrv.OnError     := Self.OnError;
- MTBdrv.OnLog       := Self.OnLog;
+ MTBdrv.OnChange        := Self.OnChange;
+ MTBdrv.OnError         := Self.OnError;
+ MTBdrv.OnLog           := Self.OnLog;
+ MTBdrv.OnInputChange   := Self.OnInputChanged;
+ MTBdrv.OnOutputChange  := Self.OnOutputChanged;
 
  MTBdrv.BeforeOpen  := Self.BeforeOpen;
  MTBdrv.AfterOpen   := Self.AfterOpen;
@@ -498,5 +505,15 @@ begin
    end;//case
   end;//if errAddr = 255
 end;//procedure
+
+procedure TFormConfig.OnInputChanged(Sender: TObject; module: byte);
+begin
+ if (Assigned(Self.PrgEvents.prgInputChanged)) then Self.PrgEvents.prgInputChanged(Self, module);
+end;
+
+procedure TFormConfig.OnOutputChanged(Sender: TObject; module: byte);
+begin
+ if (Assigned(Self.PrgEvents.prgOutputChanged)) then Self.PrgEvents.prgOutputChanged(Self, module);
+end;
 
 end.//unit

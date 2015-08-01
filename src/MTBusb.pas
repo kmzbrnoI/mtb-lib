@@ -5,7 +5,7 @@
 //  (c) Petr Travnik (petr.travnik@kmz-brno.cz),
 //      Jan Horacek (jan.horacek@kmz-brno.cz),
 //      Michal Petrilak (engineercz@gmail.com)
-// 30.05.2015
+// 01.08.2015
 ////////////////////////////////////////////////////////////////////////////////
 
 {
@@ -218,6 +218,7 @@ type
 
   type TNotifyEventError = procedure (Sender: TObject; errValue: word; errAddr: byte) of object;
   type TNotifyEventLog = procedure (Sender: TObject; logValue: string) of object;
+  type TNotifyEventChange = procedure (Sender: TObject; module: byte) of object;
 
   TMTBusb = class(TComponent)
   private
@@ -283,6 +284,8 @@ type
     FOnLog : TNotifyEventLog;
     FOnScan : TNotifyEvent;
     FOnChange : TNotifyEvent;
+    FOnInputChange : TNotifyEventChange;
+    FOnOutputChange : TNotifyEventChange;
     function MT_send_packet(buf: array of byte; count:byte): integer;
 //    FOnActivityChange  : TStateChangeEvent;
 
@@ -446,6 +449,8 @@ type
     property OnLog : TNotifyEventLog read FOnLog write FOnLog;
     property OnChange : TNotifyEvent read FOnChange write FOnChange;
     property OnScan : TNotifyEvent read FOnScan write FOnScan;
+    property OnInputChange : TNotifyEventChange read FOnInputChange write FOnInputChange;
+    property OnOutputChange : TNotifyEventChange read FOnOutputChange write FOnOutputChange;
 
     property BeforeOpen : TNotifyEvent read FBeforeOpen write FBeforeOpen;
     property AfterOpen : TNotifyEvent read FAfterOpen write FAfterOpen;
@@ -1514,7 +1519,7 @@ begin
                               //FPortIn[adresa*16+j].inDn := False;
                             end;
                           end;
-                          FModule[adresa].Input.value := inDataNew1
+                          FModule[adresa].Input.value := inDataNew1;
                         end;
                         (*
                         if ((FModule[adresa].Input.value AND $00FF) = FT_In_Buffer[i*8+2]     ) then FModule[adresa].Input.changed := true;
@@ -1842,6 +1847,7 @@ begin
                   mdata[3] := Hi(FModule[i].Output.value);
                   MT_send_packet(mdata, 4);
                   FModule[i].Output.changed := false;
+                  if (Assigned(OnOutputChange)) then OnOutputChange(Self, i);
                 end;
               end;
             { Sem doplnit odelsáni dat na modul
@@ -1889,6 +1895,7 @@ begin
                   mdata[3] := FModule[i].Scom.ScomCode[j];    // Scom code
                   MT_send_packet(mdata, 4);
                   FModule[i].Scom.changed[j] := False;
+                  if (Assigned(OnOutputChange)) then OnOutputChange(Self, i);
                 end;
               end;
             end;
@@ -1907,20 +1914,12 @@ begin
               changed := true;
               //LogWrite('Changed is true 1');
               Case FModule[i].typ of
-                idMTB_UNI_ID,idMTB_TTL_ID: begin
-                  FInputChanged := True;     // Nastavi pri zmene na vstupech I/O
-                  //LogWrite('InpChanged is true');
-                end;
-                idMTB_POT_ID: begin
-                  FPotChanged := True;       // Nastavi pri zmene POT
-                  //LogWrite('PotChanged is true');
-                end;
-                idMTB_REGP_ID: begin
-                  FOverChanged := True;      // Nastavi pri pretizeni REG
-                  //LogWrite('OverChanged is true');
-                end;
+                idMTB_UNI_ID,idMTB_TTL_ID : FInputChanged := True;              // Nastavi pri zmene na vstupech I/O
+                idMTB_POT_ID              : FPotChanged   := True;              // Nastavi pri zmene POT
+                idMTB_REGP_ID             : FOverChanged  := True;              // Nastavi pri pretizeni REG
               end;
               FModule[i].Input.changed := false;
+              if (Assigned(OnInputChange)) then OnInputChange(Self, i);
             end;
           end;
         end;

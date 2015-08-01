@@ -96,7 +96,7 @@
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">2</VersionInfo>
 						<VersionInfo Name="MinorVer">2</VersionInfo>
-						<VersionInfo Name="Release">14</VersionInfo>
+						<VersionInfo Name="Release">15</VersionInfo>
 						<VersionInfo Name="Build">0</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
@@ -109,7 +109,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Michal Petrilak, Jan Horacek, Petr Travnik</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">Knihovna pro komukaci se systemem MTB</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">2.2.14.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">2.2.15.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">MTB knihovna</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright">KMZ Brno I</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks"/>
