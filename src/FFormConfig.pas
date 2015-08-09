@@ -5,7 +5,7 @@
 //  (c) Petr Travnik (petr.travnik@kmz-brno.cz),
 //      Jan Horacek (jan.horacek@kmz-brno.cz),
 //      Michal Petrilak (engineercz@gmail.com)
-// 15.07.2015
+// 09.08.2015
 ////////////////////////////////////////////////////////////////////////////////
 
 {

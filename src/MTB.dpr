@@ -5,7 +5,7 @@
 //  (c) Petr Travnik (petr.travnik@kmz-brno.cz),
 //      Jan Horacek (jan.horacek@kmz-brno.cz),
 //      Michal Petrilak (engineercz@gmail.com)
-// 01.08.2015
+// 09.08.2015
 ////////////////////////////////////////////////////////////////////////////////
 
 {
@@ -76,37 +76,32 @@ uses
 
 ////////////////////////////////////////////////////////////////////////////////
 // This function should be called before unloading.
-
-function OnUnload(): Integer; stdcall;
+procedure Unload(); stdcall;
 begin
   FreeAndNil(MTBdrv);
   FreeAndNil(FormModule);
   FreeAndNil(FormConfig);
-  Result := 0;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Config dialog showing/hiding:
 
-function ShowConfigDialog(): Integer; stdcall;
+procedure ShowConfigDialog(); stdcall;
 begin
-  FormConfig.Show;
-  Result := 0;
+  FormConfig.Show();
 end;
 
-function HideConfigDialog(): Integer; stdcall;
+procedure HideConfigDialog(); stdcall;
 begin
-  FormConfig.Hide;
-  Result := 0;
+  FormConfig.Hide();
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Show about dialog:
 
-function ShowAboutDialog(): Integer; stdcall;
+procedure ShowAboutDialog(); stdcall;
 begin
-  F_About.ShowModal;
-  Result := 0;
+  F_About.ShowModal();
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -180,78 +175,76 @@ end;
 // Returns versions:
 
 function GetDeviceVersion:string; stdcall;
- begin
+begin
   Result := MTBdrv.HWVersion;
- end;
+end;
 
 function GetDriverVersion:string; stdcall;
- begin
+begin
   Result := SW_VERSION;
- end;
+end;
 
 function GetLibVersion: string; stdcall;
 begin
- Result := _VERSION;
+  Result := _VERSION;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Returns true of module exists, therwise false.
 
 function GetModuleExists(Module:integer):boolean;stdcall;
- begin
+begin
   Result := (MTBdrv.IsModule(Module) and (not MTBdrv.IsModuleFailure(Module)));
- end;
+end;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Opens and closes MTB device.
 
-function Open:integer;stdcall;
- begin
+procedure Open(); stdcall;
+begin
   MTBdrv.Open(MTBdrv.UsbSerial);
-  result := 0;
 end;
 
-function Close:integer;stdcall;
- begin
-  MTBdrv.Close;
-  result := 0;
+procedure Close(); stdcall;
+begin
+  MTBdrv.Close();
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Returns module type (as string)
 
 function GetModuleType(Module:Integer):string; stdcall;
- begin
+begin
   if (MTBdrv.IsModule(Module)) then
     Result := MTBdrv.GetModuleTypeName(Module)
   else
     Result := 'modul neexistuje';
- end;//function
+end;//function
 
 ////////////////////////////////////////////////////////////////////////////////
 // Returns module name (as string)
 
 function GetModuleName(Module:Integer):string; stdcall;
- begin
+begin
   Result := MTBdrv.GetModuleCfg(Module).CFGpopis;
- end;//function
+end;//function
 
 ////////////////////////////////////////////////////////////////////////////////
 // Returns module firmware version (as string)
 
 function GetModuleFirmware(Module:integer):string; stdcall;
- begin
+begin
   if (MTBdrv.IsModule(Module)) then
     Result := MTBdrv.GetModuleCfg(Module).CFGfw
   else
     Result := 'modul neexistuje';
- end;//function
+end;//function
 
 ////////////////////////////////////////////////////////////////////////////////
 // Sets module name
 
 function SetModuleName(Module:Integer;Name:string):Integer; stdcall;
- begin
+begin
   MTBdrv.GetModuleCfg(Module);
   MTBdrv.WrCfgData.CFGdata[0] := MTBdrv.RdCfgdata.CFGdata[0];
   MTBdrv.WrCfgData.CFGdata[1] := MTBdrv.RdCfgdata.CFGdata[1];
@@ -259,13 +252,13 @@ function SetModuleName(Module:Integer;Name:string):Integer; stdcall;
   MTBdrv.WrCfgData.CFGpopis := Name;
   MTBdrv.SetModuleCfg(Module);
   Result := 0;
- end;
+end;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Sets MTB speed (must be called before open)
 
 function SetMtbSpeed(Speed:Integer):Integer; stdcall;
- begin
+begin
   if (Speed <= 2) then
    begin
     MTBdrv.MtbSpeed := TMtbSpeed(Speed+2);
@@ -273,13 +266,13 @@ function SetMtbSpeed(Speed:Integer):Integer; stdcall;
     Result := 0;
    end else
     Result := 50;
- end;
+end;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Sets output
 
 function SetOutput(Module, Port, State: Integer): Integer; stdcall;
- begin
+begin
   if (MTBdrv.IsModule(Module)) then
    begin
     if (port >= 0) AND (port <= 15) then
@@ -306,14 +299,14 @@ function SetOutput(Module, Port, State: Integer): Integer; stdcall;
      end;//case GetModuleType
     Result := 0;
    end else Result := -2;
- end;//function
+end;//function
 
 ////////////////////////////////////////////////////////////////////////////////
 // Is device open?
 
 function IsOpen():Boolean; stdcall;
 begin
- Result := MTBdrv.Openned;
+  Result := MTBdrv.Openned;
 end;//function
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -321,7 +314,7 @@ end;//function
 
 function IsStart():Boolean; stdcall;
 begin
- Result := MTBdrv.Scanning;
+  Result := MTBdrv.Scanning;
 end;//function
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -329,57 +322,57 @@ end;//function
 
 procedure SetBeforeOpen(ptr:TStdNotifyEvent); stdcall;
 begin
- LibEvents.BeforeOpen := ptr;
+  LibEvents.BeforeOpen := ptr;
 end;//function
 
 procedure SetAfterOpen(ptr:TStdNotifyEvent); stdcall;
 begin
- LibEvents.AfterOpen := ptr;
+  LibEvents.AfterOpen := ptr;
 end;//function
 
 procedure SetBeforeClose(ptr:TStdNotifyEvent); stdcall;
 begin
- LibEvents.BeforeClose := ptr;
+  LibEvents.BeforeClose := ptr;
 end;//function
 
 procedure SetAfterClose(ptr:TStdNotifyEvent); stdcall;
 begin
- LibEvents.AfterClose := ptr;
+  LibEvents.AfterClose := ptr;
 end;//function
 
 procedure SetBeforeStart(ptr:TStdNotifyEvent); stdcall;
 begin
- LibEvents.BeforeStart := ptr;
+  LibEvents.BeforeStart := ptr;
 end;//function
 
 procedure SetAfterStart(ptr:TStdNotifyEvent); stdcall;
 begin
- LibEvents.AfterStart := ptr;
+  LibEvents.AfterStart := ptr;
 end;//function
 
 procedure SetBeforeStop(ptr:TStdNotifyEvent); stdcall;
 begin
- LibEvents.BeforeStop := ptr;
+  LibEvents.BeforeStop := ptr;
 end;//function
 
 procedure SetAfterStop(ptr:TStdNotifyEvent); stdcall;
 begin
- LibEvents.AfterStop := ptr;
+  LibEvents.AfterStop := ptr;
 end;//function
 
 procedure SetOnError(ptr:TMyErrorEvent); stdcall;
 begin
- LibEvents.OnError := ptr;
+  LibEvents.OnError := ptr;
 end;//function
 
 procedure SetOnInputChange(ptr:TMyModuleChangeEvent); stdcall;
 begin
- LibEvents.OnInputChanged := ptr;
+  LibEvents.OnInputChanged := ptr;
 end;//function
 
 procedure SetOnOutputChange(ptr:TMyModuleChangeEvent); stdcall;
 begin
- LibEvents.OnOutputChanged := ptr;
+  LibEvents.OnOutputChanged := ptr;
 end;//function
 
 // ----- setting callback events end -----
@@ -388,7 +381,7 @@ end;//function
 // Exported functions (dll exported):
 
 exports
-  OnUnload name 'onunload',
+  Unload name 'onunload',
   Start name 'start',
   Stop name 'stop',
   GetInput name 'getinput',
@@ -437,5 +430,5 @@ begin
    end else
     FormConfig.OnLog(FormConfig,'ERR: objekt MTBdrv nebyl vytvoren !');
 
-end.//unit
+end.
 
