@@ -20,8 +20,8 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_DependencyCheckOutputName>..\..\..\..\Delphi\hJOPserver\output\MTB.dll</DCC_DependencyCheckOutputName>
-			<DCC_ExeOutput>..\..\..\..\Delphi\hJOPserver\output\</DCC_ExeOutput>
+			<DCC_DependencyCheckOutputName>..\outunit\MTB.dll</DCC_DependencyCheckOutputName>
+			<DCC_ExeOutput>..\outunit\</DCC_ExeOutput>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_Platform>x86</DCC_Platform>
 			<DCC_BplOutput>..\Outunit\</DCC_BplOutput>
