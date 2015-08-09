@@ -69,13 +69,14 @@ uses
   MTBD2XXUnit in 'MTBD2XXUnit.pas',
   FFormModule in 'FFormModule.pas' {FormModule},
   About in 'About.pas' {F_About},
-  MTBusb in 'MTBusb.pas';
+  MTBusb in 'MTBusb.pas',
+  LibraryEvents in 'LibraryEvents.pas';
 
 {$R *.res}
 
 ////////////////////////////////////////////////////////////////////////////////
-
 // This function should be called before unloading.
+
 function OnUnload(): Integer; stdcall;
 begin
   FreeAndNil(MTBdrv);
@@ -163,6 +164,7 @@ begin
   if ((port < 0) or (port > 15)) then Exit(-2);
 
   MTBport := Module*16 + Port;
+  Result := 0;
   if (MTBdrv.IsScomOut(MTBport)) then
     Result := MTBdrv.GetScomCode(MTBport)
   else begin
@@ -327,57 +329,57 @@ end;//function
 
 procedure SetBeforeOpen(ptr:TStdNotifyEvent); stdcall;
 begin
- FormConfig.PrgEvents.prgBeforeOpen := ptr;
+ LibEvents.BeforeOpen := ptr;
 end;//function
 
 procedure SetAfterOpen(ptr:TStdNotifyEvent); stdcall;
 begin
- FormConfig.PrgEvents.prgAfterOpen := ptr;
+ LibEvents.AfterOpen := ptr;
 end;//function
 
 procedure SetBeforeClose(ptr:TStdNotifyEvent); stdcall;
 begin
- FormConfig.PrgEvents.prgBeforeClose := ptr;
+ LibEvents.BeforeClose := ptr;
 end;//function
 
 procedure SetAfterClose(ptr:TStdNotifyEvent); stdcall;
 begin
- FormConfig.PrgEvents.prgAfterClose := ptr;
+ LibEvents.AfterClose := ptr;
 end;//function
 
 procedure SetBeforeStart(ptr:TStdNotifyEvent); stdcall;
 begin
- FormConfig.PrgEvents.prgBeforeStart := ptr;
+ LibEvents.BeforeStart := ptr;
 end;//function
 
 procedure SetAfterStart(ptr:TStdNotifyEvent); stdcall;
 begin
- FormConfig.PrgEvents.prgAfterStart := ptr;
+ LibEvents.AfterStart := ptr;
 end;//function
 
 procedure SetBeforeStop(ptr:TStdNotifyEvent); stdcall;
 begin
- FormConfig.PrgEvents.prgBeforeStop := ptr;
+ LibEvents.BeforeStop := ptr;
 end;//function
 
 procedure SetAfterStop(ptr:TStdNotifyEvent); stdcall;
 begin
- FormConfig.PrgEvents.prgAfterStop := ptr;
+ LibEvents.AfterStop := ptr;
 end;//function
 
 procedure SetOnError(ptr:TMyErrorEvent); stdcall;
 begin
- FormConfig.PrgEvents.prgError := ptr;
+ LibEvents.OnError := ptr;
 end;//function
 
 procedure SetOnInputChange(ptr:TMyModuleChangeEvent); stdcall;
 begin
- FormConfig.PrgEvents.prgInputChanged := ptr;
+ LibEvents.OnInputChanged := ptr;
 end;//function
 
 procedure SetOnOutputChange(ptr:TMyModuleChangeEvent); stdcall;
 begin
- FormConfig.PrgEvents.prgOutputChanged := ptr;
+ LibEvents.OnOutputChanged := ptr;
 end;//function
 
 // ----- setting callback events end -----
@@ -428,7 +430,6 @@ begin
   Application.CreateForm(TFormConfig, FormConfig);
   Application.CreateForm(TFormModule, FormModule);
   Application.CreateForm(TF_About, F_About);
-
   if Assigned(MTBdrv) then
    begin
     if (FormConfig.cb_mtbName.ItemIndex = -1) then

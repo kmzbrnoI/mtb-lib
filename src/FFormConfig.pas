@@ -42,25 +42,6 @@ uses
   FFormModule, ExtCtrls;
 
 type
-  TMyErrorEvent = function (Sender: TObject; errValue: word; errAddr: byte; errMsg:string):Integer; stdcall;
-  TStdNotifyEvent = procedure (Sender: TObject) of object; stdcall;
-  TMyModuleChangeEvent = procedure (Sender: TObject; module: byte) of object; stdcall;
-
-  TPrgEvents = record
-    prgBeforeOpen:TStdNotifyEvent;
-    prgAfterOpen:TStdNotifyEvent;
-    prgBeforeClose:TStdNotifyEvent;
-    prgAfterClose:TStdNotifyEvent;
-
-    prgBeforeStart:TStdNotifyEvent;
-    prgAfterStart:TStdNotifyEvent;
-    prgBeforeStop:TStdNotifyEvent;
-    prgAfterStop:TStdNotifyEvent;
-
-    prgError:TMyErrorEvent;
-    prgInputChanged:TMyModuleChangeEvent;
-    prgOutputChanged:TMyModuleChangeEvent;
-  end;
 
    TFormConfig = class(TForm)
     pm_mod: TPopupMenu;
@@ -133,7 +114,7 @@ type
   private
 
   public
-   PrgEvents:TPrgEvents;
+
   end;
 
 var
@@ -142,7 +123,7 @@ var
 implementation
 
 {$R *.dfm}
-uses About, MTBusb;
+uses About, MTBusb, LibraryEvents;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -347,7 +328,7 @@ begin
 
  Self.L_Openned.Caption := 'otevírám...';
  Self.L_Openned.Font.Color := clSilver;
- if (Assigned(Self.PrgEvents.prgBeforeOpen)) then Self.PrgEvents.prgBeforeOpen(Self);
+ if (Assigned(LibEvents.BeforeOpen)) then LibEvents.BeforeOpen(Self);
 
  Self.cb_speed.Enabled   := false;
  Self.cb_mtbName.Enabled := false;
@@ -361,7 +342,7 @@ begin
  Self.L_Openned.Caption := 'otevøeno';
  Self.L_Openned.Font.Color := clGreen;
  Self.OnScanned(Self);
- if (Assigned(Self.PrgEvents.prgAfterOpen)) then Self.PrgEvents.prgAfterOpen(Self);
+ if (Assigned(LibEvents.AfterOpen)) then LibEvents.AfterOpen(Self);
 end;//procedure
 
 procedure TFormConfig.BeforeClose(Sender:TObject);
@@ -370,7 +351,7 @@ begin
 
  Self.L_Openned.Caption := 'zavírám...';
  Self.L_Openned.Font.Color := clSilver;
- if (Assigned(Self.PrgEvents.prgBeforeClose)) then Self.PrgEvents.prgBeforeClose(Self);
+ if (Assigned(LibEvents.BeforeClose)) then LibEvents.BeforeClose(Self);
 end;//procedure
 
 procedure TFormConfig.AfterClose(Sender:TObject);
@@ -379,7 +360,7 @@ begin
 
  Self.L_Openned.Caption := 'uzavøeno';
  Self.L_Openned.Font.Color := clRed;
- if (Assigned(Self.PrgEvents.prgAfterClose)) then Self.PrgEvents.prgAfterClose(Self);
+ if (Assigned(LibEvents.AfterClose)) then LibEvents.AfterClose(Self);
 
  Self.cb_speed.Enabled   := true;
  Self.cb_mtbName.Enabled := true;
@@ -392,7 +373,7 @@ begin
 
  Self.L_Started.Caption := 'spouštím...';
  Self.L_Started.Font.Color   := clSilver;
- if (Assigned(Self.PrgEvents.prgBeforeStart)) then Self.PrgEvents.prgBeforeStart(Self);
+ if (Assigned(LibEvents.BeforeStart)) then LibEvents.BeforeStart(Self);
 
  Self.b_ScanBrd.Enabled  := false;
 end;//procedure
@@ -403,7 +384,7 @@ begin
 
  Self.L_Started.Caption := 'spuštìna';
  Self.L_Started.Font.Color   := clGreen;
- if (Assigned(Self.PrgEvents.prgAfterStart)) then Self.PrgEvents.prgAfterStart(Self);
+ if (Assigned(LibEvents.AfterStart)) then LibEvents.AfterStart(Self);
  FormModule.RefreshStates();
 end;//procedure
 
@@ -413,7 +394,7 @@ begin
 
  Self.L_Started.Caption := 'zastavuji...';
  Self.L_Started.Font.Color   := clSilver;
- if (Assigned(Self.PrgEvents.prgBeforeStop)) then Self.PrgEvents.prgBeforeStop(Self);
+ if (Assigned(LibEvents.BeforeStop)) then LibEvents.BeforeStop(Self);
 
  Self.b_ScanBrd.Enabled  := true;
  Self.cb_mtbName.Enabled := true;
@@ -447,7 +428,7 @@ begin
 
  Self.L_Started.Caption      := 'zastavena';
  Self.L_Started.Font.Color   := clRed;
- if (Assigned(Self.PrgEvents.prgAfterStop)) then Self.PrgEvents.prgAfterStop(Self);
+ if (Assigned(LibEvents.AfterStop)) then LibEvents.AfterStop(Self);
 end;//procedure
 
 procedure TFormConfig.OnChange(Sender:TObject);
@@ -476,7 +457,7 @@ begin
 
  Self.OnLog(Sender,'ERR: '+str);
 
- if (Assigned(Self.PrgEvents.prgError)) then Self.PrgEvents.prgError(Self, errValue, errAddr, MTBdrv.GetErrString(errValue));
+ if (Assigned(LibEvents.OnError)) then LibEvents.OnError(Self, errValue, errAddr, MTBdrv.GetErrString(errValue));
 
  if (errAddr = 255) then
   begin
@@ -508,12 +489,12 @@ end;//procedure
 
 procedure TFormConfig.OnInputChanged(Sender: TObject; module: byte);
 begin
- if (Assigned(Self.PrgEvents.prgInputChanged)) then Self.PrgEvents.prgInputChanged(Self, module);
+ if (Assigned(LibEvents.OnInputChanged)) then LibEvents.OnInputChanged(Self, module);
 end;
 
 procedure TFormConfig.OnOutputChanged(Sender: TObject; module: byte);
 begin
- if (Assigned(Self.PrgEvents.prgOutputChanged)) then Self.PrgEvents.prgOutputChanged(Self, module);
+ if (Assigned(LibEvents.OnOutputChanged)) then LibEvents.OnOutputChanged(Self, module);
 end;
 
 end.//unit
