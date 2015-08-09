@@ -328,7 +328,7 @@ begin
 
  Self.L_Openned.Caption := 'otevírám...';
  Self.L_Openned.Font.Color := clSilver;
- if (Assigned(LibEvents.BeforeOpen)) then LibEvents.BeforeOpen(Self);
+ if (Assigned(LibEvents.BeforeOpen.event)) then LibEvents.BeforeOpen.event(Self, LibEvents.BeforeOpen.data);
 
  Self.cb_speed.Enabled   := false;
  Self.cb_mtbName.Enabled := false;
@@ -342,7 +342,7 @@ begin
  Self.L_Openned.Caption := 'otevøeno';
  Self.L_Openned.Font.Color := clGreen;
  Self.OnScanned(Self);
- if (Assigned(LibEvents.AfterOpen)) then LibEvents.AfterOpen(Self);
+ if (Assigned(LibEvents.AfterOpen.event)) then LibEvents.AfterOpen.event(Self, LibEvents.AfterOpen.data);
 end;//procedure
 
 procedure TFormConfig.BeforeClose(Sender:TObject);
@@ -351,7 +351,7 @@ begin
 
  Self.L_Openned.Caption := 'zavírám...';
  Self.L_Openned.Font.Color := clSilver;
- if (Assigned(LibEvents.BeforeClose)) then LibEvents.BeforeClose(Self);
+ if (Assigned(LibEvents.BeforeClose.event)) then LibEvents.BeforeClose.event(Self, LibEvents.BeforeClose.data);
 end;//procedure
 
 procedure TFormConfig.AfterClose(Sender:TObject);
@@ -360,7 +360,7 @@ begin
 
  Self.L_Openned.Caption := 'uzavøeno';
  Self.L_Openned.Font.Color := clRed;
- if (Assigned(LibEvents.AfterClose)) then LibEvents.AfterClose(Self);
+ if (Assigned(LibEvents.AfterClose.event)) then LibEvents.AfterClose.event(Self, LibEvents.AfterClose.data);
 
  Self.cb_speed.Enabled   := true;
  Self.cb_mtbName.Enabled := true;
@@ -373,7 +373,7 @@ begin
 
  Self.L_Started.Caption := 'spouštím...';
  Self.L_Started.Font.Color   := clSilver;
- if (Assigned(LibEvents.BeforeStart)) then LibEvents.BeforeStart(Self);
+ if (Assigned(LibEvents.BeforeStart.event)) then LibEvents.BeforeStart.event(Self, LibEvents.BeforeStart.data);
 
  Self.b_ScanBrd.Enabled  := false;
 end;//procedure
@@ -384,7 +384,7 @@ begin
 
  Self.L_Started.Caption := 'spuštìna';
  Self.L_Started.Font.Color   := clGreen;
- if (Assigned(LibEvents.AfterStart)) then LibEvents.AfterStart(Self);
+ if (Assigned(LibEvents.AfterStart.event)) then LibEvents.AfterStart.event(Self, LibEvents.AfterStart.data);
  FormModule.RefreshStates();
 end;//procedure
 
@@ -394,7 +394,7 @@ begin
 
  Self.L_Started.Caption := 'zastavuji...';
  Self.L_Started.Font.Color   := clSilver;
- if (Assigned(LibEvents.BeforeStop)) then LibEvents.BeforeStop(Self);
+ if (Assigned(LibEvents.BeforeStop.event)) then LibEvents.BeforeStop.event(Self, LibEvents.BeforeStop.data);
 
  Self.b_ScanBrd.Enabled  := true;
  Self.cb_mtbName.Enabled := true;
@@ -428,7 +428,7 @@ begin
 
  Self.L_Started.Caption      := 'zastavena';
  Self.L_Started.Font.Color   := clRed;
- if (Assigned(LibEvents.AfterStop)) then LibEvents.AfterStop(Self);
+ if (Assigned(LibEvents.AfterStop.event)) then LibEvents.AfterStop.event(Self, LibEvents.AfterStop.data);
 end;//procedure
 
 procedure TFormConfig.OnChange(Sender:TObject);
@@ -457,7 +457,7 @@ begin
 
  Self.OnLog(Sender,'ERR: '+str);
 
- if (Assigned(LibEvents.OnError)) then LibEvents.OnError(Self, errValue, errAddr, MTBdrv.GetErrString(errValue));
+ if (Assigned(LibEvents.OnError.event)) then LibEvents.OnError.event(Self, LibEvents.OnError.data, errValue, errAddr, MTBdrv.GetErrString(errValue));
 
  if (errAddr = 255) then
   begin
@@ -489,12 +489,12 @@ end;//procedure
 
 procedure TFormConfig.OnInputChanged(Sender: TObject; module: byte);
 begin
- if (Assigned(LibEvents.OnInputChanged)) then LibEvents.OnInputChanged(Self, module);
+ if (Assigned(LibEvents.OnInputChanged.event)) then LibEvents.OnInputChanged.event(Self, LibEvents.OnInputChanged.data, module);
 end;
 
 procedure TFormConfig.OnOutputChanged(Sender: TObject; module: byte);
 begin
- if (Assigned(LibEvents.OnOutputChanged)) then LibEvents.OnOutputChanged(Self, module);
+ if (Assigned(LibEvents.OnOutputChanged.event)) then LibEvents.OnOutputChanged.event(Self, LibEvents.OnOutputChanged.data, module);
 end;
 
 end.//unit

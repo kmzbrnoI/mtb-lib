@@ -320,59 +320,70 @@ end;//function
 ////////////////////////////////////////////////////////////////////////////////
 // ----- setting callback events begin -----
 
-procedure SetBeforeOpen(ptr:TStdNotifyEvent); stdcall;
+procedure SetBeforeOpen(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-  LibEvents.BeforeOpen := ptr;
+  LibEvents.BeforeOpen.data  := data;
+  LibEvents.BeforeOpen.event := event;
 end;//function
 
-procedure SetAfterOpen(ptr:TStdNotifyEvent); stdcall;
+procedure SetAfterOpen(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-  LibEvents.AfterOpen := ptr;
+  LibEvents.AfterOpen.data  := data;
+  LibEvents.AfterOpen.event := event;
 end;//function
 
-procedure SetBeforeClose(ptr:TStdNotifyEvent); stdcall;
+procedure SetBeforeClose(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-  LibEvents.BeforeClose := ptr;
+  LibEvents.BeforeClose.data  := data;
+  LibEvents.BeforeClose.event := event;
 end;//function
 
-procedure SetAfterClose(ptr:TStdNotifyEvent); stdcall;
+procedure SetAfterClose(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-  LibEvents.AfterClose := ptr;
+  LibEvents.AfterClose.data  := data;
+  LibEvents.AfterClose.event := event;
 end;//function
 
-procedure SetBeforeStart(ptr:TStdNotifyEvent); stdcall;
+procedure SetBeforeStart(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-  LibEvents.BeforeStart := ptr;
+  LibEvents.BeforeStart.data  := data;
+  LibEvents.BeforeStart.event := event;
 end;//function
 
-procedure SetAfterStart(ptr:TStdNotifyEvent); stdcall;
+procedure SetAfterStart(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-  LibEvents.AfterStart := ptr;
+  LibEvents.AfterStart.data  := data;
+  LibEvents.AfterStart.event := event;
 end;//function
 
-procedure SetBeforeStop(ptr:TStdNotifyEvent); stdcall;
+procedure SetBeforeStop(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-  LibEvents.BeforeStop := ptr;
+  LibEvents.BeforeStop.data  := data;
+  LibEvents.BeforeStop.event := event;
 end;//function
 
-procedure SetAfterStop(ptr:TStdNotifyEvent); stdcall;
+procedure SetAfterStop(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-  LibEvents.AfterStop := ptr;
+  LibEvents.AfterStop.data  := data;
+  LibEvents.AfterStop.event := event;
 end;//function
 
-procedure SetOnError(ptr:TMyErrorEvent); stdcall;
+procedure SetOnError(event:TStdErrorEvent; data:Pointer); stdcall;
 begin
-  LibEvents.OnError := ptr;
+  LibEvents.OnError.data  := data;
+  LibEvents.OnError.event := event;
 end;//function
 
-procedure SetOnInputChange(ptr:TMyModuleChangeEvent); stdcall;
+procedure SetOnInputChange(event:TStdModuleChangeEvent; data:Pointer); stdcall;
 begin
-  LibEvents.OnInputChanged := ptr;
+  LibEvents.OnInputChanged.data  := data;
+  LibEvents.OnInputChanged.event := event;
 end;//function
 
-procedure SetOnOutputChange(ptr:TMyModuleChangeEvent); stdcall;
+procedure SetOnOutputChange(event:TStdModuleChangeEvent; data:Pointer); stdcall;
 begin
-  LibEvents.OnOutputChanged := ptr;
+  LibEvents.OnOutputChanged.data  := data;
+  LibEvents.OnOutputChanged.event := event;
 end;//function
 
 // ----- setting callback events end -----

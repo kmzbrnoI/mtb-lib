@@ -20,8 +20,8 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_DependencyCheckOutputName>..\Output\MTB.dll</DCC_DependencyCheckOutputName>
-			<DCC_ExeOutput>..\Output\</DCC_ExeOutput>
+			<DCC_DependencyCheckOutputName>..\..\..\..\Delphi\hJOPserver\output\MTB.dll</DCC_DependencyCheckOutputName>
+			<DCC_ExeOutput>..\..\..\..\Delphi\hJOPserver\output\</DCC_ExeOutput>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_Platform>x86</DCC_Platform>
 			<DCC_BplOutput>..\Outunit\</DCC_BplOutput>
@@ -86,9 +86,9 @@
 						<Source Name="MainSource">MTB.dpr</Source>
 					</Source>
 					<Parameters>
-						<Parameters Name="HostApplication">D:\UsersData\JanHoracek\CPP\MendelUTestMTBDll\bin\Debug\MendelUTestMTBDll.exe</Parameters>
+						<Parameters Name="HostApplication">D:\UsersData\Vlak\Delphi\hJOPserver\output\hJOPserver.exe</Parameters>
 						<Parameters Name="UseLauncher">False</Parameters>
-						<Parameters Name="DebugCWD">D:\UsersData\JanHoracek\CPP\MendelUTestMTBDll\bin\Debug\</Parameters>
+						<Parameters Name="DebugCWD">D:\UsersData\Vlak\Delphi\hJOPserver\output\</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
 					</Parameters>
@@ -97,7 +97,7 @@
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">2</VersionInfo>
 						<VersionInfo Name="MinorVer">2</VersionInfo>
-						<VersionInfo Name="Release">17</VersionInfo>
+						<VersionInfo Name="Release">18</VersionInfo>
 						<VersionInfo Name="Build">0</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
@@ -110,7 +110,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Michal Petrilak, Jan Horacek, Petr Travnik</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">Knihovna pro komukaci se systemem MTB</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">2.2.17.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">2.2.18.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">MTB knihovna</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright">KMZ Brno I</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks"/>
