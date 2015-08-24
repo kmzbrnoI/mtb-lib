@@ -38,10 +38,6 @@ object FormConfig: TFormConfig
       Margins.Bottom = 2
       Caption = 'P'#345'ipojen'#237
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object l_2: TLabel
         Left = 13
         Top = 62
@@ -77,7 +73,7 @@ object FormConfig: TFormConfig
         Width = 137
         Height = 21
         Style = csDropDownList
-        ItemHeight = 0
+        ItemHeight = 13
         TabOrder = 0
         OnChange = cb_mtbNameChange
       end
@@ -87,7 +83,7 @@ object FormConfig: TFormConfig
         Width = 137
         Height = 21
         Style = csDropDownList
-        ItemHeight = 0
+        ItemHeight = 13
         ItemIndex = 0
         TabOrder = 1
         Text = '38 400'
@@ -167,10 +163,6 @@ object FormConfig: TFormConfig
       Margins.Right = 2
       Margins.Bottom = 2
       Caption = 'Stav p'#345'ipojen'#237
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label1: TLabel
         Left = 15
         Top = 13
@@ -261,7 +253,7 @@ object FormConfig: TFormConfig
         Columns = <
           item
             Caption = 'N'#225'zev'
-            Width = 90
+            Width = 280
           end
           item
             Caption = 'Adresa'
@@ -299,10 +291,6 @@ object FormConfig: TFormConfig
       Margins.Bottom = 2
       Caption = 'Log'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object LV_Log: TListView
         Left = 0
         Top = 0
