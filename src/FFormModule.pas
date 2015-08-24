@@ -108,10 +108,10 @@ begin
 
     textIN[i] := TLabel.Create(Self);
     with textIN[i] do begin
-      Parent := gb_1;
-      Left   := ledIN[i].Left + 50;
-      Top    := ledIN[i].Top;
-      Text   := IntToStr(i);
+      Parent  := gb_1;
+      Left    := ledIN[i].Left + 20;
+      Top     := ledIN[i].Top;
+      Caption := IntToStr(i);
     end;
 
     ledOUT[i] := TShape.Create(Self);
@@ -127,10 +127,10 @@ begin
 
     textOUT[i] := TLabel.Create(Self);
     with textOUT[i] do begin
-      Parent := gb_1;
-      Left   := ledOUT[i].Left + 50;
-      Top    := ledOUT[i].Top;
-      Text   := IntToStr(i);
+      Parent  := gb_2;
+      Left    := ledOUT[i].Left + 20;
+      Top     := ledOUT[i].Top;
+      Caption := IntToStr(i);
     end;
   end;
 end;//procedure
