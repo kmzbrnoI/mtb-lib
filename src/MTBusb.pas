@@ -1920,6 +1920,7 @@ begin
               end;
               FModule[i].Input.changed := false;
               if (Assigned(OnInputChange)) then OnInputChange(Self, i);
+              if ((FModule[i].failure) and (Assigned(OnOutputChange))) then OnOutputChange(Self, i);
             end;
           end;
         end;
