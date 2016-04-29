@@ -289,14 +289,18 @@ procedure TFormConfig.LV_LogCustomDrawItem(Sender: TCustomListView;
 var str:string;
 begin
  (Sender as TCustomListView).Canvas.Brush.Color := clWhite;
- str := LeftStr(Item.SubItems.Strings[0],3);
 
- if (str = 'ERR') then (Sender as TCustomListView).Canvas.Brush.Color := $AAFFFF;
+ if (Item.SubItems.Count > 0) then
+  begin
+   str := LeftStr(Item.SubItems.Strings[0],3);
 
- str := RightStr(Item.SubItems.Strings[0],Length(Item.SubItems.Strings[0])-13);
- str := LeftStr(str,7);
- if (str = 'Data in') then (Sender as TCustomListView).Canvas.Brush.Color := $FFD0D0;
- if (str = 'Data ou') then (Sender as TCustomListView).Canvas.Brush.Color := $A0FFD0;
+   if (str = 'ERR') then (Sender as TCustomListView).Canvas.Brush.Color := $AAFFFF;
+
+   str := RightStr(Item.SubItems.Strings[0],Length(Item.SubItems.Strings[0])-13);
+   str := LeftStr(str,7);
+   if (str = 'Data in') then (Sender as TCustomListView).Canvas.Brush.Color := $FFD0D0;
+   if (str = 'Data ou') then (Sender as TCustomListView).Canvas.Brush.Color := $A0FFD0;
+  end;
 end;
 
 procedure TFormConfig.FormCloseQuery(Sender: TObject;
@@ -441,7 +445,7 @@ var LI:TListItem;
 begin
  if (not Assigned(Self.LV_Log)) then Exit;
 
- if (Self.LV_Log.Items.Count > 2000) then
+ if (Self.LV_Log.Items.Count > 1000) then
   Self.LV_Log.Clear();
 
  LI := Self.LV_Log.Items.Insert(0);

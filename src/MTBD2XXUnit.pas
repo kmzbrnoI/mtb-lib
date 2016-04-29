@@ -71,6 +71,7 @@ Function Get_USB_Device_QueueStatus : FT_Result;
 Function Open_USB_Device_By_Serial_Number( Serial_Number : string ) : FT_Result;
 Function Open_USB_Device_By_Device_Description( Device_Description : string ) : FT_Result;
 
+
 Var
 // Port Handle Returned by the Open Function
 // Used by the Subsequent Function Calls

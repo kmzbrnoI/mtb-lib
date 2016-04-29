@@ -28,7 +28,7 @@ object FormConfig: TFormConfig
     Margins.Top = 2
     Margins.Right = 2
     Margins.Bottom = 2
-    ActivePage = TS_Modules
+    ActivePage = TS_Log
     Align = alClient
     TabOrder = 0
     object TS_Device: TTabSheet
