@@ -1,7 +1,7 @@
 MTB COMMUNICATION LIBRARY
 =========================
 
-# Description
+## Description
     - This library is a middleware used for communicating with MTB-USB
        module and your program. Is simplifies communication with the MTB.
     - Library is implemented in Object Pascal, last compiled and edited in
@@ -12,7 +12,7 @@ MTB COMMUNICATION LIBRARY
     - Most of the comments are written in czech, please be letient.
     - This library supports JUST MTB-UNI, MTB-TTL and MTB-REG modules!
 
-# How-to
+## How-to
   1.  connect MTB-USB board via USB
   2.  install modified FTDI drivers (see MTBD2XXUnit.pas)
   3.  load the library
@@ -25,7 +25,7 @@ MTB COMMUNICATION LIBRARY
   9.  stop communication by calling Stop()
   10. close device by calling Close()
 
-# Authors
+## Authors
  - Jan Horacek (jan.horacek@kmz-brno.cz)
  - Michal Petrilak (engineercz@gmail.com)
  - Petr Travnik (petr.travnik@kmz-brno.cz)
