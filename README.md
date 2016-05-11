@@ -1,4 +1,4 @@
-MTB COMMUNICATION LIBRARY
+MTB communication library
 =========================
 
 ## Description
