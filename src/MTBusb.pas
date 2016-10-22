@@ -43,7 +43,10 @@ uses
   Windows, SysUtils, Classes, IniFiles, ExtCtrls, Forms, math, MTBD2XXUnit;
 
 // Verze komponenty
-const  SW_VERSION : string = '0.11.0.0';
+const
+  SW_VERSION : string = '0.11.0.0';
+  MIN_FW_VERSION: Integer = 920;
+
 // verze pro FW 0.9.6 a vyšší
 
 const  _ADDR_MAX_NUM = 191;     // maximalni pocet adres;
@@ -128,6 +131,16 @@ type
     TPotDirect  = 0..1;    // Smer potenciometru
     TPortValue  = 0..4095; // Hodnota Portu
    // TFlickSet   = 0..2;    //
+
+  // Exceptions
+  EAlreadyOpened = class(Exception);
+  ECannotOpenPort = class(Exception);
+  EFirmwareTooLog = class(Exception);
+  ENotOpened = class(Exception);
+  EAlreadyStarted = class(Exception);
+  EOpeningNotFinished = class(Exception);
+  ENoModules = class(Exception);
+  ENotStarted = class(Exception);
 
   TModulType = (idNone = $0, idMTB_POT_ID = $10, idMTB_REGP_ID = $30, idMTB_UNI_ID = $40,
         idMTB_UNIOUT_ID = $50, idMTB_TTL_ID = $60, idMTB_TTLOUT_ID = $70);
@@ -229,7 +242,6 @@ type
     FDataDir : String;  // adresar pro data a cfg
     FLogDir  : String;  // adresar pro log soubor
     FLogFileName : String; // nazev log souboru
-//    FScanInterval: word;
     FOpenned: boolean;
     FScanning: boolean;
     FusbName: String;
@@ -259,7 +271,6 @@ type
     FDriverVersion: string;
 
     FCmdCount: word;      // pocet cmd/sec
-    //FCmdCountOld: word;   // posledni hodnota poctu cmd
     FCmdCountCounter: word;  // citac 1 sec v timeru
     FCmdCounter_flag : boolean;  // priznak zmeny poctu cmd
     FCmdSecCycleNum : word;
@@ -287,7 +298,6 @@ type
     FOnInputChange : TNotifyEventChange;
     FOnOutputChange : TNotifyEventChange;
     function MT_send_packet(buf: array of byte; count:byte): integer;
-//    FOnActivityChange  : TStateChangeEvent;
 
     function GetSpeedStr: cardinal;
 
@@ -320,6 +330,8 @@ type
     function GetRegOverValue(Port: TRegChann): TPortRegOver;
 
     function GetModuleStatus(addr :TAddr): byte;
+
+    procedure LogDataOut(bufLen:Integer);
 
   protected
     { Protected declarations }
@@ -406,11 +418,13 @@ type
     property Openned: boolean read FOpenned;
     property Scanning: boolean read FScanning;
     property ErrAddres: byte read FErrAddress;
+    property OpeningScanning: boolean read FScan_flag;
 
     property CmdCounter_flag: boolean read FCmdCounter_flag;
     property CmdCount : word read FCmdCount;
     property DriverVersion: string read FDriverVersion;
     property HWVersion: string read FHWVersion;
+    property HWVersionInt: Integer read FHWVersionInt;
 
     property DataDir:string read FDataDir write FDataDir;
     property LogDir:string read FLogDir write FLogDir;
@@ -647,9 +661,7 @@ begin
   end;
   FT_Out_Buffer[count+1] := Lo($8000-sum);
   s := s + IntToHex(FT_Out_Buffer[count+1],2);
-  if FLogDataOutWrite_flag then begin
-    LogWrite('Data out: '+IntToHex(FT_Out_Buffer[0],2)+' '+IntToHex(FT_Out_Buffer[1],2)+' '+IntToHex(FT_Out_Buffer[2],2)+s);
-  end;
+  LogDataOut(count+2);
   Write_USB_Device_Buffer(count+2);
 end;
 
@@ -1178,9 +1190,7 @@ begin
   if FScanning then begin
     FT_Out_Buffer[0] := _USB_SET + 1;
     FT_Out_Buffer[1] := 5;
-    if FLogDataOutWrite_flag then begin
-      LogWrite('Data out: '+IntToHex(FT_Out_Buffer[0],2)+' '+IntToHex(FT_Out_Buffer[1],2));
-    end;
+    LogDataOut(2);
     Write_USB_Device_Buffer(2);
   end;
 end;
@@ -1191,9 +1201,7 @@ begin
   if FScanning then begin
     FT_Out_Buffer[0] := _USB_SET + 1;
     FT_Out_Buffer[1] := 21;
-    if FLogDataOutWrite_flag then begin
-      LogWrite('Data out: '+IntToHex(FT_Out_Buffer[0],2)+' '+IntToHex(FT_Out_Buffer[1],2));
-    end;
+    LogDataOut(2);
     Write_USB_Device_Buffer(2);
   end;
 end;
@@ -1227,9 +1235,7 @@ begin
     FT_Out_Buffer[2] := Hi(mAddr);
     FT_Out_Buffer[3] := Lo(mAddr);
     FT_Out_Buffer[4] := mData;
-    if FLogDataOutWrite_flag then begin
-      LogWrite('Data out XRAM Rd): '+IntToHex(FT_Out_Buffer[0],2)+' '+IntToHex(FT_Out_Buffer[1],2)+' '+IntToHex(FT_Out_Buffer[2],2)+' '+IntToHex(FT_Out_Buffer[3],2)+' '+IntToHex(FT_Out_Buffer[4],2));
-    end;
+    LogDataOut(5);
     Write_USB_Device_Buffer(5); // Data do XRAM
   end;
 end;
@@ -1242,10 +1248,7 @@ begin
     FT_Out_Buffer[1] := 11;
     FT_Out_Buffer[2] := Hi(mAddr);
     FT_Out_Buffer[3] := Lo(mAddr);
-    //FT_Out_Buffer[4] := mData;
-    if FLogDataOutWrite_flag then begin
-      LogWrite('Data out XRAM Rd): '+IntToHex(FT_Out_Buffer[0],2)+' '+IntToHex(FT_Out_Buffer[1],2)+' '+IntToHex(FT_Out_Buffer[2],2)+' '+IntToHex(FT_Out_Buffer[3],2));
-    end;
+    LogDataOut(4);
     Write_USB_Device_Buffer(4); // Data do XRAM
   end;
 end;
@@ -1954,107 +1957,68 @@ end;
 // otevre zarizeni
 procedure TMTBusb.Open(serial_num: String);
 var
-  okay: boolean;
   i: word;
 begin
-  DateSeparator := '_';
-  ShortDateFormat := 'yyyy/mm/dd';
+  if (FOpenned) then raise EAlreadyOpened.Create('MTB already opened');
+  if (FScanning) then raise EAlreadyStarted.Create('MTB already started');
 
-  DateSeparator := '.';
-  ShortDateFormat := 'dd/mm/yyyy';
-  //LogWrite('Spuštìní programu #'+DateToStr(now)+' verze MTBdrv: '+ SW_VERSION);
+  if Assigned(BeforeOpen) then BeforeOpen(Self);
 
-  if (not FOpenned AND not FScanning) then begin
-    if Assigned(BeforeOpen) then BeforeOpen(Self);
-    okay := True;
+  FT_Enable_Error_Report := false;
+  if (Open_USB_Device_By_Serial_Number(serial_num) <> FT_OK) then
+    raise ECannotOpenPort.Create('Cannot open port');
 
-    FT_Enable_Error_Report := false;
-    if (Open_USB_Device_By_Serial_Number(serial_num) <> FT_OK) then okay := false;
-
-    // Pøi chybì vyvolá událost
-    if (okay) then begin
-      // Nulovat poc. hodnoty
-      FModuleCount := 0;
-      for i:= 1 to _MTB_MAX_ADDR do begin
-        FModule[i].CFGnum := 0;
-        FModule[i].ID := 0;
-        FModule[i].typ := idNone;
-        FModule[i].available := false;
-        FModule[i].firmware := '';
-      end;
-
-      FT_Enable_Error_Report := true;
-      FTimer.Enabled := true;
-
-      Set_USB_Device_TimeOuts(20,200); // nastavit Timeout pro FIF0 Read/write
-      Purge_USB_Device_Out;
-                                                                  
-      FT_Out_Buffer[0] := _USB_SET + 1;
-      FT_Out_Buffer[1] := 1;
-      if FLogDataOutWrite_flag then begin
-        LogWrite('Data out: '+IntToHex(FT_Out_Buffer[0],2)+' '+IntToHex(FT_Out_Buffer[1],2));
-      end;
-      Write_USB_Device_Buffer(2); // Zjistí verzi FW
-
-      //FOpenned := true;
-      FScan_flag := true;
-      FDataInputErr := false;
-
-      FT_Out_Buffer[0]:= _SCAN_MTB;                 // Zaèátek skenování
-      if FLogDataOutWrite_flag then begin
-        LogWrite('Data out: '+IntToHex(FT_Out_Buffer[0],2));
-      end;
-      Write_USB_Device_Buffer(1);
-      LogWrite('Otevøení zaøízení: ' + UsbSerial);
-      LogWrite('Driver v' + GetDriverVersion);
-     end else begin
-      Self.WriteError(2,255);
-    end;
-  end else begin
-    Self.WriteError(1,255);
+  // Nulovat poc. hodnoty
+  FModuleCount := 0;
+  for i:= 1 to _MTB_MAX_ADDR do begin
+    FModule[i].CFGnum := 0;
+    FModule[i].ID := 0;
+    FModule[i].typ := idNone;
+    FModule[i].available := false;
+    FModule[i].firmware := '';
   end;
+
+  FT_Enable_Error_Report := true;
+  FTimer.Enabled := true;
+
+  // set FIFO timeout
+  Set_USB_Device_TimeOuts(20,200);
+  Purge_USB_Device_Out;
+
+  // get FW version
+  FT_Out_Buffer[0] := _USB_SET + 1;
+  FT_Out_Buffer[1] := 1;
+  Self.LogDataOut(2);
+  Write_USB_Device_Buffer(2);
+
+  FScan_flag := true;
+  FDataInputErr := false;
+
+  // begin scanning
+  FT_Out_Buffer[0]:= _SCAN_MTB;
+  Self.LogDataOut(1);
+  Write_USB_Device_Buffer(1);
+
+  LogWrite('Otevøení zaøízení: ' + UsbSerial);
+  LogWrite('Driver v' + GetDriverVersion);
 end;
 
 // uzavre zarizeni
 procedure TMTBusb.Close();
 begin
-  if (not FScanning AND FOpenned) then begin
-    if Assigned(BeforeClose) then BeforeClose(Self);
+  if Assigned(BeforeClose) then BeforeClose(Self);
 
-    { Sem doplnit uzavøení zaøízení }
-    FT_Out_Buffer[0] := _USB_RST;
-    if FLogDataOutWrite_flag then begin
-      LogWrite('Data out: '+IntToHex(FT_Out_Buffer[0],2));
-    end;
-    Write_USB_Device_Buffer(1);    // Reset MTB USB
+  // Reset MTB-USB
+  FT_Out_Buffer[0] := _USB_RST;
+  LogDataOut(1);
+  Write_USB_Device_Buffer(1);
 
-    Close_USB_Device;
-    FTimer.Enabled := false;
-    FOpenned := false;
-    LogWrite('***** Uzavøení zaøízení *****');
-    LogWrite('-----------------------------');
-    if Assigned(AfterClose) then AfterClose(Self);
-   end else begin
-    (*
-    if FScanning then begin
-      LogWrite('***** Uzavøení zaøízení - test1*****');
-      FScanning := False;
-      //FT_Out_Buffer[0] := _USB_RST;
-      //Write_USB_Device_Buffer(1);    // Reset MTB USB
-
-      Close_USB_Device;
-      FTimer.Enabled := false;
-      FOpenned := false;
-
-    end;
-    *)
-
-    FTimer.Enabled := false;
-    FOpenned := false;
-    Self.WriteError(11, 255);
-    LogWrite('***** Uzavøení zaøízení - porucha*****');
-    LogWrite('-----------------------------');
-  end;
+  Close_USB_Device;
+  FTimer.Enabled := false;
+  FOpenned := false;
+  LogWrite('***** Uzavøení zaøízení *****');
+  LogWrite('-----------------------------');
+  if Assigned(AfterClose) then AfterClose(Self);
 end;
 
 // spusti komunikaci
@@ -2063,116 +2027,92 @@ var
   i, j: word;
  // mdata: array[0..7] of byte;
 begin
-  if FHWVersionInt < 920 then begin
-    Self.WriteError(22, 255);
-    LogWrite('Nelze spustit komunikaci MTB - verze FW je menší 0.9.20');
-    Exit;
+  if (not FOpenned) then raise ENotOpened.Create('Device not opened, cannot start!');
+  if (FScanning) then raise EAlreadyStarted.Create('Scanning already started!');
+  if (FHWVersionInt < MIN_FW_VERSION) then raise EFirmwareTooLog.Create('FW < 0.9.20, cannot start!');
+  if (FModuleCount = 0) then raise ENoModules.Create('No modules found on bus, cannot start!');
+
+  Purge_USB_Device_Out; // vyprazdnit FIFO out
+  // Nulovat vstupy, vystupy?
+  for i := 1 to _MTB_MAX_ADDR do begin
+    FModule[i].revived := False;
+    FModule[i].failure := False;
+
+    FModule[i].Input.value := 0;
+    FModule[i].Input.changed := False;
+    FModule[i].Output.value := 0;
+    FModule[i].Output.changed := False;
+    for j := 0 to 7 do begin
+      FModule[i].Scom.ScomCode[j] := 0;
+      FModule[i].Scom.changed[j] := False;
+      FModule[i].Scom.ScomActive[j] := False;
+    end;
+    if FModule[i].CFData[0] and $1 = 1 then begin
+      FModule[i].Scom.ScomActive[0] := True;
+      FModule[i].Scom.ScomActive[1] := True;
+    end;
+    if FModule[i].CFData[0] and $2 = 2 then begin
+      FModule[i].Scom.ScomActive[2] := True;
+      FModule[i].Scom.ScomActive[3] := True;
+    end;
+    if FModule[i].CFData[0] and $4 = 4 then begin
+      FModule[i].Scom.ScomActive[4] := True;
+      FModule[i].Scom.ScomActive[5] := True;
+    end;
+    if FModule[i].CFData[0] and $8 = 8 then begin
+      FModule[i].Scom.ScomActive[6] := True;
+      FModule[i].Scom.ScomActive[7] := True;
+    end;
   end;
-  if FModuleCount = 0 then begin
-    Self.WriteError(25, 255);
-    LogWrite('Nelze spustit komunikaci - nalezeno 0 modulù');
-    Exit;
+  for i := 0 to _PORT_MAX_NUM do begin
+    FPortIn[i].value := False;
+    FPortIn[i].inUp := False;
+    FPortIn[i].inDn := False;
+  end;
+  for i := 0 to _POT_CHANN-1 do begin
+    FPot[i].PotValue := 0;
+    FPot[i].PotDirect := 0;
   end;
 
-  if (FOpenned AND (not FScanning) AND FSeznam_flag) then begin
-    Purge_USB_Device_Out; // vyprazdnit FIFO out
-    // Nulovat vstupy, vystupy?
-    for i := 1 to _MTB_MAX_ADDR do begin
-      FModule[i].revived := False;
-      FModule[i].failure := False;
+  Setpriorityclass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 
-      FModule[i].Input.value := 0;
-      FModule[i].Input.changed := False;
-      FModule[i].Output.value := 0;
-      FModule[i].Output.changed := False;
-      for j := 0 to 7 do begin
-        FModule[i].Scom.ScomCode[j] := 0;
-        FModule[i].Scom.changed[j] := False;
-        FModule[i].Scom.ScomActive[j] := False;
-      end;
-      if FModule[i].CFData[0] and $1 = 1 then begin
-        FModule[i].Scom.ScomActive[0] := True;
-        FModule[i].Scom.ScomActive[1] := True;
-      end;
-      if FModule[i].CFData[0] and $2 = 2 then begin
-        FModule[i].Scom.ScomActive[2] := True;
-        FModule[i].Scom.ScomActive[3] := True;
-      end;
-      if FModule[i].CFData[0] and $4 = 4 then begin
-        FModule[i].Scom.ScomActive[4] := True;
-        FModule[i].Scom.ScomActive[5] := True;
-      end;
-      if FModule[i].CFData[0] and $8 = 8 then begin
-        FModule[i].Scom.ScomActive[6] := True;
-        FModule[i].Scom.ScomActive[7] := True;
-      end;
+  FT_Out_Buffer[0] := _MTB_SET + 1;
+  FT_Out_Buffer[1] := 0;
+  LogDataOut(2);
+  Write_USB_Device_Buffer(2); // Reset XRAM
+
+  for i := 1 to _MTB_MAX_ADDR do begin
+    if (FModule[i].available) then begin
+      FT_Out_Buffer[0] := _MTB_SET + 7;
+      FT_Out_Buffer[1] := i;
+      FT_Out_Buffer[2] := FModule[i].ID;
+      FT_Out_Buffer[3] := FModule[i].setting;  // Bit 0 ==> používat modul?
+      FT_Out_Buffer[4] := FModule[i].CFData[0];
+      FT_Out_Buffer[5] := FModule[i].CFData[1];
+      FT_Out_Buffer[6] := FModule[i].CFData[2];
+      FT_Out_Buffer[7] := FModule[i].CFData[3];
+      LogDataOut(8);
+      Write_USB_Device_Buffer(8);
     end;
-    for i := 0 to _PORT_MAX_NUM do begin
-      FPortIn[i].value := False;
-      FPortIn[i].inUp := False;
-      FPortIn[i].inDn := False;
-    end;
-    for i := 0 to _POT_CHANN-1 do begin
-      FPot[i].PotValue := 0;
-      FPot[i].PotDirect := 0;
-    end;
-
-    Setpriorityclass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-
-    FT_Out_Buffer[0] := _MTB_SET + 1;
-    FT_Out_Buffer[1] := 0;
-    if FLogDataOutWrite_flag then begin
-      LogWrite('Data out: '+IntToHex(FT_Out_Buffer[0],2)+' '+IntToHex(FT_Out_Buffer[1],2));
-    end;
-    Write_USB_Device_Buffer(2); // Reset XRAM
-
-    for i := 1 to _MTB_MAX_ADDR do begin
-      if (FModule[i].available) then begin
-        FT_Out_Buffer[0] := _MTB_SET + 7;
-        FT_Out_Buffer[1] := i;
-        FT_Out_Buffer[2] := FModule[i].ID;
-        FT_Out_Buffer[3] := FModule[i].setting;  // Bit 0 ==> používat modul?
-        //FT_Out_Buffer[3] := 255;  // Bit 0 ==> používat modul?
-        FT_Out_Buffer[4] := FModule[i].CFData[0];
-        FT_Out_Buffer[5] := FModule[i].CFData[1];
-        FT_Out_Buffer[6] := FModule[i].CFData[2];
-        FT_Out_Buffer[7] := FModule[i].CFData[3];
-        if FLogDataOutWrite_flag then begin
-          //LogWrite('Data out: '+IntToHex(FT_Out_Buffer[0],2)+' '+IntToHex(FT_Out_Buffer[1],2));
-          LogWrite('Data out: '+IntToHex(FT_Out_Buffer[0],2)
-             +' '+IntToHex(FT_Out_Buffer[1],2)+' '+IntToHex(FT_Out_Buffer[2],2)
-             +' '+IntToHex(FT_Out_Buffer[3],2)+' '+IntToHex(FT_Out_Buffer[4],2)
-             +' '+IntToHex(FT_Out_Buffer[5],2)+' '+IntToHex(FT_Out_Buffer[6],2)
-             +' '+IntToHex(FT_Out_Buffer[7],2));
-        end;
-        Write_USB_Device_Buffer(8);
-      end;
-    end;
-
-    SendCyclesData;
-
-    FT_Out_Buffer[0] := _USB_SET + 1;
-    FT_Out_Buffer[1] := Ord(FSpeed);
-    if FLogDataOutWrite_flag then begin
-      LogWrite('Data out: '+IntToHex(FT_Out_Buffer[0],2)+' '+IntToHex(FT_Out_Buffer[1],2));
-    end;
-    Write_USB_Device_Buffer(2); // Nastavit rychlost komunikace
-
-    FT_Out_Buffer[0] := _COM_ON;                  // spuštìní skenování
-    if FLogDataOutWrite_flag then begin
-      LogWrite('Data out: '+IntToHex(FT_Out_Buffer[0],2));
-    end;
-    Write_USB_Device_Buffer(1);
-
-    FScanning := true;
-    LogWrite('----- Spuštìní komunikace -----');
-    LogWrite('Speed: '+ IntToStr(GetSpeedStr)+'bd     ScanInterval: ' + IntToStr(ord(ScanInterval)));
-    GetCmdNum;
-
-     if (Assigned(AfterStart)) then AfterStart(Self);
-   end else begin
-    Self.WriteError(21,255);
   end;
+
+  SendCyclesData;
+
+  FT_Out_Buffer[0] := _USB_SET + 1;
+  FT_Out_Buffer[1] := Ord(FSpeed);
+  LogDataOut(2);
+  Write_USB_Device_Buffer(2); // Nastavit rychlost komunikace
+
+  FT_Out_Buffer[0] := _COM_ON;                  // spuštìní skenování
+  LogDataOut(1);
+  Write_USB_Device_Buffer(1);
+
+  FScanning := true;
+  LogWrite('----- Spuštìní komunikace -----');
+  LogWrite('Speed: '+ IntToStr(GetSpeedStr)+'bd     ScanInterval: ' + IntToStr(ord(ScanInterval)));
+  GetCmdNum;
+
+  if (Assigned(AfterStart)) then AfterStart(Self);
 end;
 
 // zastavi komunikaci
@@ -2180,29 +2120,25 @@ procedure TMTBusb.Stop();
 var
  i : word;
 begin
- if (Assigned(BeforeStop)) then BeforeStop(Self);
+  if (not FScanning) then raise ENotStarted.Create('Communication not started, cannot close!');
+  if (not FOpenned) then raise ENotOpened.Create('Device not opened, cannot stop communication!');
 
-  if (FScanning and FOpenned) then begin
-    // doplnit odeslani dat pro moduly
-    FT_Out_Buffer[0] := _COM_OFF;                  // zastavení skenování
-    if FLogDataOutWrite_flag then begin
-      LogWrite('Data out: '+IntToHex(FT_Out_Buffer[0],2));
-    end;
-    Write_USB_Device_Buffer(1);
+  if (Assigned(BeforeStop)) then BeforeStop(Self);
 
-    FScanning := false;
-    LogWrite('----- Zastavení komunikace -----');
-    Setpriorityclass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
-    // vynulovat hodnoty !! doplnit asi !!
-    for i := 1 to _MTB_MAX_ADDR do begin
-      FModule[i].Status := 0;
-    end;
+  // doplnit odeslani dat pro moduly
+  FT_Out_Buffer[0] := _COM_OFF;                  // zastavení skenování
+  LogDataOut(1);
+  Write_USB_Device_Buffer(1);
 
-    if (Assigned(AfterStop)) then AfterStop(Self);
-   end else begin
-    if (not FScanning) then
-      Self.WriteError(31,255);
+  FScanning := false;
+  LogWrite('----- Zastavení komunikace -----');
+  Setpriorityclass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
+  // vynulovat hodnoty !! doplnit asi !!
+  for i := 1 to _MTB_MAX_ADDR do begin
+    FModule[i].Status := 0;
   end;
+
+  if (Assigned(AfterStop)) then AfterStop(Self);
 end;
 
 constructor TMTBusb.Create(AOwner : TComponent;MyDir:string);
@@ -2317,5 +2253,17 @@ begin
  Self.LogWrite('ERR: '+Description);
  Self.WriteError(300+Error, 255);
 end;//procedure
+
+procedure TMTBusb.LogDataOut(bufLen:Integer);
+begin
+ // TODO
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+
+initialization
+
+finalization
+  FreeAndNil(MTBdrv);
 
 end.

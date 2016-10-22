@@ -71,177 +71,365 @@ uses
   FFormModule in 'FFormModule.pas' {FormModule},
   About in 'About.pas' {F_About},
   MTBusb in 'MTBusb.pas',
-  LibraryEvents in 'LibraryEvents.pas';
+  LibraryEvents in 'LibraryEvents.pas',
+  Errors in 'Errors.pas';
 
 {$R *.res}
 
 ////////////////////////////////////////////////////////////////////////////////
-// This function should be called before unloading.
-procedure Unload(); stdcall;
+////////////////////////////////////////////////////////////////////////////////
+// Configuration files:
+
+function LoadConfig(filename:PChar):Integer; stdcall;
 begin
-  FreeAndNil(MTBdrv);
-  FreeAndNil(FormModule);
-  FreeAndNil(FormConfig);
+
+end;
+
+function SaveConfig(filename:PChar):Integer; stdcall;
+begin
+
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Config dialog showing/hiding:
+// Logging:
+
+procedure SetLogLevelFile(loglevel:Cardinal); stdcall;
+begin
+
+end;
+
+procedure SetLogLevelEvent(loglevel:Cardinal); stdcall;
+begin
+
+end;
+
+function GetLogLevelFile():Cardinal; stdcall;
+begin
+
+end;
+
+function GetLogLevelEvent():Cardinal; stdcall;
+begin
+
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+// Dialogs:
 
 procedure ShowConfigDialog(); stdcall;
 begin
-  FormConfig.Show();
+  try
+    FormConfig.Show();
+  finally
+
+  end;
+
 end;
 
 procedure HideConfigDialog(); stdcall;
 begin
-  FormConfig.Hide();
+  try
+    FormConfig.Hide();
+  finally
+
+  end;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Show about dialog:
+// MTB open/close start/stop:
 
-procedure ShowAboutDialog(); stdcall;
+function Open():Integer; stdcall;
 begin
-  F_About.ShowModal();
+  try
+    MTBdrv.Open(MTBdrv.UsbSerial);
+    Result := 0;
+  except
+    on E:EAlreadyOpened do
+      Result := MTB_ALREADY_OPENNED;
+    on E:EAlreadyStarted do
+      Result := MTB_ALREADY_STARTED;
+    on E:ECannotOpenPort do
+      Result := MTB_CANNOT_OPEN_PORT;
+    on E:Exception do
+      Result := MTB_GENERAL_EXCEPTION;
+  end;
 end;
 
-////////////////////////////////////////////////////////////////////////////////
-// Start/stop communication (device must be openned):
-
-procedure Start(); stdcall;
+function OpenDevice(device:PChar; persist:boolean):Integer; stdcall;
 begin
-  MTBdrv.Start;
+  try
+    MTBdrv.Open(device);
+    Result := 0;
+  except
+    on E:EAlreadyOpened do
+      Result := MTB_ALREADY_OPENNED;
+    on E:EAlreadyStarted do
+      Result := MTB_ALREADY_STARTED;
+    on E:ECannotOpenPort do
+      Result := MTB_CANNOT_OPEN_PORT;
+    on E:Exception do
+      Result := MTB_GENERAL_EXCEPTION;
+  end;
 end;
 
-procedure Stop(); stdcall;
+function Close():Integer; stdcall;
 begin
-  MTBdrv.Stop;
+  try
+    MTBdrv.Close();
+    Result := 0;
+  except
+    Result := MTB_GENERAL_EXCEPTION;
+  end;
 end;
 
-////////////////////////////////////////////////////////////////////////////////
-// Get MTB module input state.
-//  Result values: [0 - 1] : MTB-UNI, MTB-TTL
-//                 [-15 - 15] : MTB-REG, MTB-POT
-
-function GetInput(Module, Port: Integer): Integer; stdcall;
+function Openned():Boolean; stdcall;
 begin
-  if ((Module < 1) or (Module > 255)) then Exit(-2);
-  if (not MTBdrv.IsModule(Module)) then Exit(-2);
-  if (MTBdrv.IsModuleFailure(Module)) then Exit(-2);
-  if ((port < 0) or (port > 15)) then Exit(-2);
+ try
+   Result := MTBdrv.Openned;
+ except
+   Result := false;
+ end;
+end;
 
-  Result := -2;
+function Start():Integer; stdcall;
+begin
+  try
+    if (MTBdrv.Scanning) then Exit(MTB_ALREADY_STARTED);
+    if (MTBdrv.HWVersionInt < MIN_FW_VERSION) then Exit(MTB_FIRMWARE_TOO_LOW);
+    if (not MTBdrv.Openned) then Exit(MTB_NOT_OPENED);
+    if (MTBdrv.ModuleCount = 0) then Exit(MTB_NO_MODULES);
 
-  case (MTBdrv.GetModuleType(Module)) of
-   TModulType.idMTB_POT_ID  : Result := MTBdrv.GetPotChannel(Module,Port);
-   TModulType.idMTB_REGP_ID : Result := MTBdrv.GetRegChannel(Module,Port);
+    MTBdrv.Start();
+    Result := 0;
+  except
+    Result := MTB_GENERAL_EXCEPTION;
+  end;
+end;
 
-   TModulType.idMTB_UNI_ID, TModulType.idMTB_UNIOUT_ID,
-   TModulType.idMTB_TTL_ID, TModulType.idMTB_TTLOUT_ID:begin
-     case (MTBdrv.GetInputIO(Module,Port)) of
-      false : Result := 0;
-      true  : Result := 1;
-     end;
-   end;
+function Stop():Integer; stdcall;
+begin
+  try
+    if (not MTBdrv.Scanning) then Exit(MTB_NOT_STARTED);
+    MTBdrv.Stop();
+    Result := 0;
+  except
+    Result := MTB_GENERAL_EXCEPTION;
+  end;
+end;
+
+function Started():Boolean; stdcall;
+begin
+ try
+   Result := MTBdrv.Scanning;
+ except
+   Result := false;
  end;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Get MTB module output port state.
-//  Result values: [0 - 1] : MTB-UNI, MTB-TTL standard outputs
-//                 SCom code for MTB-UNI SCom outputs
+// MTB IO functions:
 
-function GetOutput(Module, Port: Integer): Integer; stdcall;
+function GetInput(module, port: Cardinal): Integer; stdcall;
+begin
+ try
+   if ((not InRange(module, Low(TAddr), High(TAddr))) or (not MTBdrv.IsModule(module))) then Exit(MTB_MODULE_INVALID_ADDR);
+   if (MTBdrv.IsModuleFailure(module)) then Exit(MTB_MODULE_FAILED);
+   if (not InRange(port, Low(TIOchann), High(TIOchann))) then Exit(MTB_PORT_INVALID_NUMBER);
+
+   case (MTBdrv.GetModuleType(Module)) of
+     TModulType.idMTB_POT_ID  : Result := MTBdrv.GetPotChannel(Module, Port);
+     TModulType.idMTB_REGP_ID : Result := MTBdrv.GetRegChannel(Module, Port);
+
+     TModulType.idMTB_UNI_ID, TModulType.idMTB_UNIOUT_ID,
+     TModulType.idMTB_TTL_ID, TModulType.idMTB_TTLOUT_ID:begin
+       case (MTBdrv.GetInputIO(Module, Port)) of
+        false : Result := 0;
+        true  : Result := 1;
+       end;
+     end;
+   end;
+
+ except
+   Result := MTB_GENERAL_EXCEPTION;
+ end;
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+
+function GetOutput(module, port: Cardinal): Integer; stdcall;
 var MTBport:TPortValue;
 begin
-  if ((Module < 1) or (Module > 255)) then Exit(-2);
-  if (not MTBdrv.IsModule(Module)) then Exit(-2);
-  if (MTBdrv.IsModuleFailure(Module)) then Exit(-2);
-  if ((port < 0) or (port > 15)) then Exit(-2);
+  try
+    if ((not InRange(module, Low(TAddr), High(TAddr))) or (not MTBdrv.IsModule(module))) then Exit(MTB_MODULE_INVALID_ADDR);
+    if (MTBdrv.IsModuleFailure(module)) then Exit(MTB_MODULE_FAILED);
+    if (not InRange(port, Low(TIOchann), High(TIOchann))) then Exit(MTB_PORT_INVALID_NUMBER);
 
-  MTBport := Module*16 + Port;
-  Result := 0;
-  if (MTBdrv.IsScomOut(MTBport)) then
-    Result := MTBdrv.GetScomCode(MTBport)
-  else begin
-    case (MTBdrv.GetOutPort(MTBport)) of
-      false: Result := 0;
-      true : Result := 1;
-    end;//case
+    MTBport := Module*16 + Port;
+    Result := 0;
+    if (MTBdrv.IsScomOut(MTBport)) then
+      Result := MTBdrv.GetScomCode(MTBport)
+    else begin
+      case (MTBdrv.GetOutPort(MTBport)) of
+        false: Result := 0;
+        true : Result := 1;
+      end;//case
+    end;
+
+  except
+    Result := MTB_GENERAL_EXCEPTION;
   end;
 end;
 
-
 ////////////////////////////////////////////////////////////////////////////////
-// Returns versions:
 
-function GetDeviceVersion:string; stdcall;
+function SetOutput(module, port: Cardinal; state: Integer): Integer; stdcall;
 begin
-  Result := MTBdrv.HWVersion;
-end;
+  try
+    if ((not InRange(module, Low(TAddr), High(TAddr))) or (not MTBdrv.IsModule(module))) then Exit(MTB_MODULE_INVALID_ADDR);
+    if (MTBdrv.IsModuleFailure(module)) then Exit(MTB_MODULE_FAILED);
+    if (not InRange(port, Low(TIOchann), High(TIOchann))) then Exit(MTB_PORT_INVALID_NUMBER);
 
-function GetDriverVersion:string; stdcall;
-begin
-  Result := SW_VERSION;
-end;
+    case (MTBdrv.GetModuleType(Module)) of
+     TModulType.idMTB_UNI_ID, TModulType.idMTB_UNIOUT_ID,
+     TModulType.idMTB_TTL_ID, TModulType.idMTB_TTLOUT_ID:begin
+             if (MTBdrv.IsScomOut((module shl 4) or (port))) then
+              begin
+               //pokud je port SCom
+               MTBdrv.SetScomCode((module shl 4) or (port), State);
+              end else begin//SCom
+               //pokud port neni SCom
+               case (State) of
+                0:MTBdrv.SetOutputIO(Module,Port,false);
+                1:MTBdrv.SetOutputIO(Module,Port,true);
+               end;
+              end;//else SCom
+            end;//case 1..127
+     end;
 
-function GetLibVersion: string; stdcall;
-begin
-  Result := _VERSION;
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-// Returns true of module exists, therwise false.
-
-function GetModuleExists(Module:integer):boolean;stdcall;
-begin
-  Result := (MTBdrv.IsModule(Module) and (not MTBdrv.IsModuleFailure(Module)));
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-// Opens and closes MTB device.
-
-procedure Open(); stdcall;
-begin
-  MTBdrv.Open(MTBdrv.UsbSerial);
-end;
-
-procedure Close(); stdcall;
-begin
-  MTBdrv.Close();
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-// Returns module type (as string)
-
-function GetModuleType(Module:Integer):string; stdcall;
-begin
-  if (MTBdrv.IsModule(Module)) then
-    Result := MTBdrv.GetModuleTypeName(Module)
-  else
-    Result := 'modul neexistuje';
+  except
+    Result := MTB_GENERAL_EXCEPTION;
+  end;
 end;//function
 
 ////////////////////////////////////////////////////////////////////////////////
-// Returns module name (as string)
+// MTB-USB board
 
-function GetModuleName(Module:Integer):string; stdcall;
+function GetDeviceCount():Integer; stdcall;
 begin
-  Result := MTBdrv.GetModuleCfg(Module).CFGpopis;
-end;//function
+ try
+   Result := MTBdrv.GetDeviceCount;
+ except
+
+ end;
+end;
+
+procedure GetDeviceSerial(index:Integer; serial:PChar; serialLen:Cardinal); stdcall;
+begin
+ try
+   if ((index < 0) or (index >= MTBdrv.GetDeviceCount)) then Exit();
+   StrPLCopy(serial, MTBdrv.GetDeviceSerial(index), serialLen);
+ except
+
+ end;
+end;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Returns module firmware version (as string)
+// MTB modules
 
-function GetModuleFirmware(Module:integer):string; stdcall;
+function IsModule(module:Cardinal):Boolean; stdcall;
 begin
-  if (MTBdrv.IsModule(Module)) then
-    Result := MTBdrv.GetModuleCfg(Module).CFGfw
-  else
-    Result := 'modul neexistuje';
-end;//function
+ try
+   if (not InRange(module, Low(TAddr), High(TAddr))) then Exit(false);
+   Result := MTBdrv.IsModule(module) and (not MTBdrv.IsModuleFailure(module));
+ except
+   Result := false;
+ end;
+end;
+
+function IsModuleFailure(module:Cardinal):Boolean; stdcall;
+begin
+ try
+   if (not InRange(module, Low(TAddr), High(TAddr))) then Exit(false);
+   Result := MTBdrv.IsModuleFailure(module);
+ except
+   Result := false;
+ end;
+end;
+
+function GetModuleCount():Cardinal; stdcall;
+begin
+ try
+   Result := MTBdrv.ModuleCount;
+ except
+   Result := MTB_GENERAL_EXCEPTION;
+ end;
+end;
+
+function GetModuleType(module:Cardinal):Integer; stdcall;
+begin
+ try
+   if ((not InRange(module, Low(TAddr), High(TAddr))) or (not MTBdrv.IsModule(module))) then Exit(MTB_MODULE_INVALID_ADDR);
+   Result := Integer(MTBdrv.GetModuleInfo(module).typ);
+ except
+   Result := MTB_GENERAL_EXCEPTION;
+ end;
+end;
+
+function GetModuleName(module:Cardinal; name:PChar; nameLen:Cardinal):Integer; stdcall;
+begin
+ try
+   if (not InRange(module, Low(TAddr), High(TAddr))) then Exit(MTB_MODULE_INVALID_ADDR);
+   StrPLCopy(name, MTBdrv.GetModuleInfo(module).name, nameLen);
+   Result := 0;
+ except
+   Result := MTB_GENERAL_EXCEPTION;
+ end;
+end;
+
+function GetModuleFW(module:Cardinal; fw:PChar; fwLen:Cardinal):Integer; stdcall;
+begin
+ try
+   if ((not InRange(module, Low(TAddr), High(TAddr))) or (not MTBdrv.IsModule(module))) then Exit(MTB_MODULE_INVALID_ADDR);
+   StrPLCopy(fw, MTBdrv.GetModuleInfo(module).firmware, fwLen);
+   Result := 0;
+ except
+   Result := MTB_GENERAL_EXCEPTION;
+ end;
+end;
 
 ////////////////////////////////////////////////////////////////////////////////
+// Library version functions:
+
+function GetDeviceVersion(version:PChar; versionLen:Cardinal):Integer; stdcall;
+begin
+ try
+   if (not MTBdrv.Openned) then Exit(MTB_DEVICE_DISCONNECTED);
+   StrPLCopy(version, MTBdrv.HWVersion, versionLen);
+   Result := 0;
+ except
+   Result := MTB_GENERAL_EXCEPTION;
+ end;
+end;
+
+procedure GetDriverVersion(version:PChar; versionLen:Cardinal); stdcall;
+begin
+ try
+   StrPLCopy(version, SW_VERSION, versionLen);
+ finally
+
+ end;
+end;
+
+procedure GetLibVersion(version:PChar; versionLen:Cardinal); stdcall;
+begin
+ try
+   StrPLCopy(version, _VERSION, versionLen);
+ finally
+
+ end;
+end;
+
+{////////////////////////////////////////////////////////////////////////////////
 // Sets module name
 
 function SetModuleName(Module:Integer;Name:string):Integer; stdcall;
@@ -267,170 +455,98 @@ begin
     Result := 0;
    end else
     Result := 50;
+end;}
+
+////////////////////////////////////////////////////////////////////////////////
+// Event binders:
+
+
+procedure BindBeforeOpen(event:TStdNotifyEvent; data:Pointer); stdcall;
+begin
+
 end;
 
-////////////////////////////////////////////////////////////////////////////////
-// Sets output
-
-function SetOutput(Module, Port, State: Integer): Integer; stdcall;
+procedure BindAfterOpen(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-  if (MTBdrv.IsModule(Module)) then
-   begin
-    if (port >= 0) AND (port <= 15) then
-     begin
-      case (MTBdrv.GetModuleType(Module)) of
-       TModulType.idMTB_POT_ID  : ;
-       TModulType.idMTB_REGP_ID : ;
 
-       TModulType.idMTB_UNI_ID, TModulType.idMTB_UNIOUT_ID,
-       TModulType.idMTB_TTL_ID, TModulType.idMTB_TTLOUT_ID:begin
-               if (MTBdrv.IsScomOut((module shl 4) or (port))) then
-                begin
-                 //pokud je port SCom
-                 MTBdrv.SetScomCode((module shl 4) or (port),State);
-                end else begin//SCom
-                 //pokud port neni SCom
-                 case (State) of
-                  0:MTBdrv.SetOutputIO(Module,Port,false);
-                  1:MTBdrv.SetOutputIO(Module,Port,true);
-                 end;
-                end;//else SCom
-              end;//case 1..127
-       end;
-     end;//case GetModuleType
-    Result := 0;
-   end else Result := -2;
-end;//function
+end;
 
-////////////////////////////////////////////////////////////////////////////////
-// Is device open?
-
-function IsOpen():Boolean; stdcall;
+procedure BindBeforeClose(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-  Result := MTBdrv.Openned;
-end;//function
 
-////////////////////////////////////////////////////////////////////////////////
-// Is communication started?
+end;
 
-function IsStart():Boolean; stdcall;
+procedure BindAfterClose(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-  Result := MTBdrv.Scanning;
-end;//function
 
-////////////////////////////////////////////////////////////////////////////////
-// ----- setting callback events begin -----
+end;
 
-procedure SetBeforeOpen(event:TStdNotifyEvent; data:Pointer); stdcall;
+procedure BindBeforeStart(event:TStdNotifyEvent; data:Pointer); stdcall;
+begin
+
+end;
+
+procedure BindAfterStart(event:TStdNotifyEvent; data:Pointer); stdcall;
+begin
+
+end;
+
+procedure BindBeforeStop(event:TStdNotifyEvent; data:Pointer); stdcall;
+begin
+
+end;
+
+procedure BindAfterStop(event:TStdNotifyEvent; data:Pointer); stdcall;
+begin
+
+end;
+
+procedure BindOnError(event:TStdErrorEvent; data:Pointer); stdcall;
+begin
+
+end;
+
+procedure BindOnLog(event:TStdLogEvent; data:Pointer); stdcall;
+begin
+
+end;
+
+procedure BindOnInputChanged(event:TStdModuleChangeEvent; data:Pointer); stdcall;
+begin
+
+end;
+
+procedure BindOnOutputChanged(event:TStdModuleChangeEvent; data:Pointer); stdcall;
+begin
+
+end;
+
+
+{procedure SetBeforeOpen(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
   LibEvents.BeforeOpen.data  := data;
   LibEvents.BeforeOpen.event := event;
-end;//function
-
-procedure SetAfterOpen(event:TStdNotifyEvent; data:Pointer); stdcall;
-begin
-  LibEvents.AfterOpen.data  := data;
-  LibEvents.AfterOpen.event := event;
-end;//function
-
-procedure SetBeforeClose(event:TStdNotifyEvent; data:Pointer); stdcall;
-begin
-  LibEvents.BeforeClose.data  := data;
-  LibEvents.BeforeClose.event := event;
-end;//function
-
-procedure SetAfterClose(event:TStdNotifyEvent; data:Pointer); stdcall;
-begin
-  LibEvents.AfterClose.data  := data;
-  LibEvents.AfterClose.event := event;
-end;//function
-
-procedure SetBeforeStart(event:TStdNotifyEvent; data:Pointer); stdcall;
-begin
-  LibEvents.BeforeStart.data  := data;
-  LibEvents.BeforeStart.event := event;
-end;//function
-
-procedure SetAfterStart(event:TStdNotifyEvent; data:Pointer); stdcall;
-begin
-  LibEvents.AfterStart.data  := data;
-  LibEvents.AfterStart.event := event;
-end;//function
-
-procedure SetBeforeStop(event:TStdNotifyEvent; data:Pointer); stdcall;
-begin
-  LibEvents.BeforeStop.data  := data;
-  LibEvents.BeforeStop.event := event;
-end;//function
-
-procedure SetAfterStop(event:TStdNotifyEvent; data:Pointer); stdcall;
-begin
-  LibEvents.AfterStop.data  := data;
-  LibEvents.AfterStop.event := event;
-end;//function
-
-procedure SetOnError(event:TStdErrorEvent; data:Pointer); stdcall;
-begin
-  LibEvents.OnError.data  := data;
-  LibEvents.OnError.event := event;
-end;//function
-
-procedure SetOnInputChange(event:TStdModuleChangeEvent; data:Pointer); stdcall;
-begin
-  LibEvents.OnInputChanged.data  := data;
-  LibEvents.OnInputChanged.event := event;
-end;//function
-
-procedure SetOnOutputChange(event:TStdModuleChangeEvent; data:Pointer); stdcall;
-begin
-  LibEvents.OnOutputChanged.data  := data;
-  LibEvents.OnOutputChanged.event := event;
-end;//function
-
-// ----- setting callback events end -----
+end;//function }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Exported functions (dll exported):
 
 exports
-  Unload name 'onunload',
-  Start name 'start',
-  Stop name 'stop',
-  GetInput name 'getinput',
-  SetOutput name 'setoutput',
-  GetOutput name 'getoutput',
-  ShowConfigDialog name 'showconfigdialog',
-  HideConfigDialog name 'hideconfigdialog',
-  ShowAboutDialog name 'showaboutdialog',
-  GetDriverVersion name 'getdriverversion',
-  GetLibVersion name 'getlibversion',
-  GetDeviceVersion name 'getdeviceversion',
-  GetModuleFirmware name 'getmodulefirmware',
-  GetModuleExists name 'getmoduleexists',
-  GetModuleType name 'getmoduletype',
-  GetModuleName name 'getmodulename',
-  SetModuleName name 'setmodulename',
-  SetMtbSpeed name 'setmtbspeed',
-  Open name 'open',
-  Close name 'close',
-  IsOpen name 'isopen',
-  IsStart name 'isstart',
+  LoadConfig, SaveConfig,
+  SetLogLevelFile, SetLogLevelEvent, GetLogLevelFile, GetLogLevelEvent,
+  ShowConfigDialog, HideConfigDialog,
+  Open, OpenDevice, Close, Openned, Start, Stop, Started,
+  GetInput, GetOutput, SetOutput,
+  GetDeviceCount, GetDeviceSerial,
+  IsModule, IsModuleFailure, GetModuleCount, GetModuleType, GetModuleName, GetModuleFW,
+  GetDeviceVersion, GetDriverVersion, GetLibVersion,
+  BindBeforeOpen, BindAfterOpen, BindBeforeClose, BindAfterClose,
+  BindBeforeStart, BindAfterStart, BindBeforeStop, BindAfterStop,
+  BindOnError, BindOnLog, BindOnInputChanged, BindOnOutputChanged;
 
-  //events
-  SetBeforeOpen name 'setbeforeopen',
-  SetAfterOpen name 'setafteropen',
-  SetBeforeClose name 'setbeforeclose',
-  SetAfterClose name 'setafterclose',
-  SetBeforeStart name 'setbeforestart',
-  SetAfterStart name 'setafterstart',
-  SetBeforeStop name 'setbeforestop',
-  SetAfterStop name 'setafterstop',
-  SetOnError name 'setonerror',
-  SetOnInputChange name 'setoninputchange',
-  SetOnOutputChange name 'setonoutputchange';
 
 begin
-  MTBdrv := TMTBusb.Create(nil, 'mtb');
+  MTBDrv := TMTBusb.Create(nil, 'mtb');
 
   Application.CreateForm(TFormConfig, FormConfig);
   Application.CreateForm(TFormModule, FormModule);
@@ -441,6 +557,6 @@ begin
       FormConfig.OnLog(FormConfig,'ERR: nelze otevrit zarizeni, zarizeni '+MTBdrv.UsbSerial+' neexistuje')
    end else
     FormConfig.OnLog(FormConfig,'ERR: objekt MTBdrv nebyl vytvoren !');
-
 end.
+
 

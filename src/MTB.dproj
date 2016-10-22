@@ -64,6 +64,7 @@
 			</DCCReference>
 			<DCCReference Include="MTBusb.pas"/>
 			<DCCReference Include="LibraryEvents.pas"/>
+			<DCCReference Include="Errors.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

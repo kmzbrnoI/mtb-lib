@@ -461,7 +461,7 @@ begin
 
  Self.OnLog(Sender,'ERR: '+str);
 
- if (Assigned(LibEvents.OnError.event)) then LibEvents.OnError.event(Self, LibEvents.OnError.data, errValue, errAddr, MTBdrv.GetErrString(errValue));
+// if (Assigned(LibEvents.OnError.event)) then LibEvents.OnError.event(Self, LibEvents.OnError.data, errValue, errAddr, MTBdrv.GetErrString(errValue));
 
  if (errAddr = 255) then
   begin
@@ -500,5 +500,10 @@ procedure TFormConfig.OnOutputChanged(Sender: TObject; module: byte);
 begin
  if (Assigned(LibEvents.OnOutputChanged.event)) then LibEvents.OnOutputChanged.event(Self, LibEvents.OnOutputChanged.data, module);
 end;
+
+initialization
+
+finalization
+  FreeAndNil(FormConfig);
 
 end.//unit

@@ -286,4 +286,12 @@ begin
  if (Self.Showing) then Self.RefreshStates;
 end;//procedure
 
+////////////////////////////////////////////////////////////////////////////////
+
+initialization
+
+finalization
+  FreeAndNil(FormModule);
+
+
 end.
