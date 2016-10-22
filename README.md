@@ -5,7 +5,7 @@ MTB library is used to set and get state of [MTB modules](http://mtb.kmz-brno.cz
 on model railroad via simple dll interface. It supports MTB-UNI and MTB-TTL
 modules with firmware 4.1.
 
-See (project wiki)[https://github.com/kmzbrnoI/mtb-lib/wiki] for more information.
+See [project wiki](https://github.com/kmzbrnoI/mtb-lib/wiki) for more information.
 
 ## Authors
  - Jan Horacek (jan.horacek@kmz-brno.cz)
