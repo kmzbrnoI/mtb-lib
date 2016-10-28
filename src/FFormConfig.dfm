@@ -28,7 +28,7 @@ object FormConfig: TFormConfig
     Margins.Top = 2
     Margins.Right = 2
     Margins.Bottom = 2
-    ActivePage = TS_Log
+    ActivePage = TS_Device
     Align = alClient
     TabOrder = 0
     object TS_Device: TTabSheet
@@ -67,6 +67,14 @@ object FormConfig: TFormConfig
         Margins.Bottom = 2
         Caption = 'baud'
       end
+      object L_LogLevel: TLabel
+        Left = 13
+        Top = 105
+        Width = 43
+        Height = 13
+        Caption = 'Loglevel:'
+        Visible = False
+      end
       object cb_mtbName: TComboBox
         Left = 13
         Top = 35
@@ -79,7 +87,7 @@ object FormConfig: TFormConfig
       end
       object cb_speed: TComboBox
         Left = 13
-        Top = 75
+        Top = 78
         Width = 137
         Height = 21
         Style = csDropDownList
@@ -117,44 +125,23 @@ object FormConfig: TFormConfig
         TabOrder = 3
         OnClick = RG_TimerIntervalClick
       end
-      object CHB_LogOut: TCheckBox
+      object CB_LogLevel: TComboBox
         Left = 13
-        Top = 143
-        Width = 150
-        Height = 14
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        Caption = 'Logovat odchoz'#237' pakety'
+        Top = 123
+        Width = 137
+        Height = 21
+        Style = csDropDownList
+        ItemHeight = 13
         TabOrder = 4
-        OnClick = CHB_LogOutClick
-      end
-      object CHB_LogIn: TCheckBox
-        Left = 13
-        Top = 156
-        Width = 150
-        Height = 14
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        Caption = 'Logovat p'#345#237'choz'#237' pakety'
-        TabOrder = 5
-        OnClick = CHB_LogInClick
-      end
-      object CHB_Logging: TCheckBox
-        Left = 13
-        Top = 129
-        Width = 150
-        Height = 14
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        Caption = 'Logovat do souboru'
-        TabOrder = 6
-        OnClick = CHB_LoggingClick
+        Visible = False
+        OnChange = CB_LogLevelChange
+        Items.Strings = (
+          'Nic'
+          'Chyby'
+          'Zm'#283'ny stav'#367
+          'P'#345#237'kazy'
+          'Raw data'
+          'Debug')
       end
     end
     object TS_Stav: TTabSheet

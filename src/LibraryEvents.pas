@@ -4,7 +4,7 @@ interface
 
 type
   TStdNotifyEvent = procedure (Sender: TObject; data:Pointer); stdcall;
-  TStdLogEvent = procedure (Sender: TObject; data:Pointer; msg:PChar); stdcall;
+  TStdLogEvent = procedure (Sender: TObject; data:Pointer; logLevel:Integer; msg:PChar); stdcall;
   TStdErrorEvent = procedure (Sender: TObject; data:Pointer; errValue: word; errAddr: byte; errMsg:PChar); stdcall;
   TStdModuleChangeEvent = procedure (Sender: TObject; data:Pointer; module: byte); stdcall;
 
@@ -20,6 +20,10 @@ type
     event: TStdModuleChangeEvent;
     data:Pointer
   end;
+  TMyLogEvent = record
+    event: TStdLogEvent;
+    data: Pointer;
+  end;
 
   TLibEvents = record
     BeforeOpen:TMyNotifyEvent;
@@ -33,6 +37,7 @@ type
     AfterStop:TMyNotifyEvent;
 
     OnError:TMyErrorEvent;
+    OnLog:TMyLogEvent;
     OnInputChanged:TMyModuleChangeEvent;
     OnOutputChanged:TMyModuleChangeEvent;
   end;

@@ -70,7 +70,7 @@ const
 
 implementation
 
-uses FFormConfig, MTBusb;
+uses FFormConfig, MTBusb, LibCML;
 
 {$R *.dfm}
 

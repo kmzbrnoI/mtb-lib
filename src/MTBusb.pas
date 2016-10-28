@@ -53,6 +53,8 @@ const  _ADDR_MAX_NUM = 191;     // maximalni pocet adres;
 const  _PORT_MAX_NUM = 4095;    // 256*16-1;
 const  _PORTOVER_MAX_NUM = 255;    // 32*8-1;
 const  _DEFAULT_USB_NAME = 'MTB03001';
+const  _DEFAULT_ERR_ADDR = 255;
+const  _CONFIG_FN = 'mtbcfg.ini';
 
 // konstanty pro MTB-USB modul
 const
@@ -141,6 +143,10 @@ type
   EOpeningNotFinished = class(Exception);
   ENoModules = class(Exception);
   ENotStarted = class(Exception);
+  EInvalidScomCode = class(Exception);
+
+  TLogLevel = (llNo = 0, llError = 1, llChange = 2, llCmd = 3, llRawCmd = 4,
+    llDebug = 5);
 
   TModulType = (idNone = $0, idMTB_POT_ID = $10, idMTB_REGP_ID = $30, idMTB_UNI_ID = $40,
         idMTB_UNIOUT_ID = $50, idMTB_TTL_ID = $60, idMTB_TTLOUT_ID = $70);
@@ -229,9 +235,9 @@ type
     revived : Boolean;        // modul oziven po vypadku - zacal odpovidat
   end;
 
-  type TNotifyEventError = procedure (Sender: TObject; errValue: word; errAddr: byte) of object;
-  type TNotifyEventLog = procedure (Sender: TObject; logValue: string) of object;
-  type TNotifyEventChange = procedure (Sender: TObject; module: byte) of object;
+  TNotifyEventError = procedure (Sender: TObject; errValue: word; errAddr: byte) of object;
+  TNotifyEventLog = procedure (Sender: TObject; logLevel: TLogLevel; msg:string) of object;
+  TNotifyEventChange = procedure (Sender: TObject; module: byte) of object;
 
   TMTBusb = class(TComponent)
   private
@@ -240,8 +246,6 @@ type
     FScanInterval: TTimerInterval;
     FMyDir : String;
     FDataDir : String;  // adresar pro data a cfg
-    FLogDir  : String;  // adresar pro log soubor
-    FLogFileName : String; // nazev log souboru
     FOpenned: boolean;
     FScanning: boolean;
     FusbName: String;
@@ -256,9 +260,6 @@ type
     FOverChanged  : Boolean;    // zmena vstupu REG - pretizeni
     FInputChanged : Boolean;    // zmena vstupu IO - UNI/TTL
 
-    FLogWrite_flag : boolean; // povoli/zakaze zapis do logu
-    FLogDataInWrite_flag : Boolean;  // povoli/zakaze zapisovat prichozi data do logu
-    FLogDataOutWrite_flag : Boolean;  // povoli/zakaze zapisovat prichozi data do logu
     FModuleCount: byte;       // pocet nalezenych modulu na sbernici
     FScan_flag: boolean;
     FSeznam_flag: boolean;
@@ -282,6 +283,8 @@ type
     FXRamAddr  : Word;  // Adresa XRAM
     FXRamValue : Byte;  // Hodnota bunky
 
+    FLogLevel : TLogLevel;
+
     FErrAddress: byte;
     FBeforeOpen,
     FAfterOpen,
@@ -304,7 +307,7 @@ type
     procedure SetScanInterval(interval: TTimerInterval);
 
     procedure MtbScan(Sender: TObject);
-    procedure LogWrite(LogText: string);
+    procedure LogWrite(ll:TLogLevel; msg:string);
     procedure WriteError(errValue: word; errAddr: byte);
     procedure FTunit_error(Error:Integer; Description: string);
 
@@ -332,6 +335,7 @@ type
     function GetModuleStatus(addr :TAddr): byte;
 
     procedure LogDataOut(bufLen:Integer);
+    procedure LogDataIn(bufLen:Integer; bufStart:Integer = 0);
 
   protected
     { Protected declarations }
@@ -341,12 +345,11 @@ type
     WrCfgData: TModulConfigSet;
     RdCfgdata: TModulConfigGet;
 
-    constructor Create(AOwner : TComponent;MyDir:string); reintroduce;
+    constructor Create(AOwner: TComponent; MyDir:string); reintroduce;
     destructor Destroy; override;
 
     function GetDeviceCount: Integer;
     function GetDeviceSerial(index: Integer): string;
-    function GetDeviceDesc(index: Integer): string;
 
     procedure Open(serial_num: String);
     procedure Close();
@@ -405,7 +408,6 @@ type
 
     procedure SetRegSpeed(Rchan: TRegChann; Rspeed: TRegSpeed; Rdirect: TRegDirect; AccTime : TRegAcctime);
     function GetRegSpeed(Rchan: TRegChann): TReg;
-    //    function GetErrAddress: byte;
 
     procedure GetFbData;   // zadost o FB data
 
@@ -413,6 +415,9 @@ type
 
     procedure XMemWr(mAddr: word; mData : Byte);  // 10.2.2012 testovani dat XRAM
     procedure XMemRd(mAddr: word);
+
+    procedure LoadConfig(fn:string);
+    procedure SaveConfig(fn:string);
 
     property ModuleCount: byte read FModuleCount;
     property Openned: boolean read FOpenned;
@@ -427,7 +432,6 @@ type
     property HWVersionInt: Integer read FHWVersionInt;
 
     property DataDir:string read FDataDir write FDataDir;
-    property LogDir:string read FLogDir write FLogDir;
 
     property InputChanged : boolean read FInputChanged;
     property PotChanged: boolean read FPotChanged;
@@ -440,24 +444,17 @@ type
     property OutPortValue[port : TPortValue]: boolean read GetOutPort write SetOutPort;
 
     property ModuleStatus[addr : TAddr]: byte read GetModuleStatus;    // 19.4.2007
-
     property RegOver[chann : TRegChann]: TPortRegOver read GetRegOverValue; //        XPot : array[0..15] of TPot;
-    //property Objects[Index: Integer]: TObject read GetObject write SetObject;
+    property LogLevel: TLogLevel read FLogLevel write FLogLevel;
 
-//    property Modules: TModules read FModules write FModules;
   published
 
     { Published declarations }
     property UsbSerial: string read FusbName write FusbName;
 
-    //property mtbSpeed: TSpeed read FSpeed write SetSpeed default sp38400;
     property MtbSpeed: TMtbSpeed read FSpeed write FSpeed default sp38400;
 
     property ScanInterval: TTimerInterval read FScanInterval write SetScanInterval default ti100;
-
-    property LogWriting : boolean read FLogWrite_flag write FLogWrite_flag default True;
-    property LogDataInWriting : boolean read FLogDataInWrite_flag write FLogDataInWrite_flag default False;
-    property LogDataOutWriting : boolean read FLogDataOutWrite_flag write FLogDataOutWrite_flag default False;
 
     property OnError : TNotifyEventError read FOnError write FOnError;
     property OnLog : TNotifyEventLog read FOnLog write FOnLog;
@@ -477,21 +474,15 @@ type
     property AfterStop : TNotifyEvent read FAfterStop write FAfterStop;
   end;
 
-var
-    MTBdrv: TMTBusb;
-
 procedure Register;
 
 implementation
 
-uses Variants;
-
-//{$R MTBusb.dcr}
+uses Variants, Errors;
 
 procedure Register;
 begin
   RegisterComponents('MTB', [TMTBusb]);
-  //RegisterPropertyInCategory()
 end;
 
 // verze Driveru
@@ -506,40 +497,18 @@ begin
     Result.PotDirect := FPot[chann].PotDirect;
 end;
 
-// Zapise text do log souboru
-procedure TMTBusb.LogWrite(LogText: string);
-var
-  File1 : TextFile;
-  xTime : string;
-  Log : string;
+procedure TMTBusb.LogWrite(ll:TLogLevel; msg:string);
 begin
-  TimeSeparator := ':';
-  //LongTimeFormat := 'hh:mm:ss.zzz';
-  DateTimeToString(xTime, 'hh:mm:ss.zzz', Time);
-  Log := xTime + ' ' + LogText;
-  if FLogWrite_flag then begin
-    AssignFile(File1, FLogFileName);
-    if not FileExists(FLogFileName) then begin
-      Rewrite(File1);
-    end else begin
-      Append(File1)
-    end;
-    try
-      Writeln(File1, Log);
-    except
-
-    end;
-    CloseFile(File1);
-  end;
-  if (Assigned(OnLog)) then OnLog(Self, Log);
+ if ((ll >= Self.LogLevel) and (Assigned(OnLog))) then
+   OnLog(Self, ll, msg);
 end;
 
 procedure TMTBusb.WriteError(errValue: word; errAddr: byte);
 var str:string;
 begin
  if (Assigned(OnError)) then OnError(Self, errValue, errAddr);
- str := MTBdrv.GetErrString(errValue)+' (Val:'+IntToStr(errValue)+'; Addr:'+IntToStr(errAddr)+')';
- Self.LogWrite('ERR: '+str);
+ str := Self.GetErrString(errValue)+' (Val:'+IntToStr(errValue)+'; Addr:'+IntToStr(errAddr)+')';
+ Self.LogWrite(llError, 'ERR: '+str);
 end;//procedure
 
 // Vrati pocet pripojenych zarizeni
@@ -554,11 +523,6 @@ function TMTBusb.GetDeviceSerial(index: Integer): string;
 begin
   GetFTDeviceSerialNo(index);
   Result := FT_Device_String;
-end;
-
-function TMTBusb.GetDeviceDesc(index: Integer): string;
-begin
- //
 end;
 
 // vrati stav vsech vstupu jako word
@@ -684,7 +648,7 @@ begin
   if not IsScomOut(Port) then Exit;
   if code > 15 then begin
     FModule[GetAdrr(Port)].Scom.ScomCode[GetChannel(Port)] := 0;
-    LogWrite('Chybný Scom kód:'+IntToStr(code)+'  adresa:'+IntToStr(GetAdrr(Port))+':'+IntToStr(GetChannel(Port)));
+    raise EInvalidScomCode.Create('Scom code must be between 0 and 15');
   end else begin
     FModule[GetAdrr(Port)].Scom.ScomCode[GetChannel(Port)] := code;
   end;
@@ -1221,7 +1185,8 @@ begin
     FT_Out_Buffer[0] := _USB_SET + 2;
     FT_Out_Buffer[1] := 31;
     FT_Out_Buffer[2] := FCyclesFbData * 10;
-    LogWrite('Cycles FB Data: ('+IntToStr(FT_Out_Buffer[2])+') '+IntToHex(FT_Out_Buffer[0],2)+' '+IntToHex(FT_Out_Buffer[1],2)+' '+IntToHex(FT_Out_Buffer[2],2));
+    LogWrite(llCmd, 'Cycles FB Data');
+    LogDataOut(3);
     Write_USB_Device_Buffer(3); // Nastavi CyclesData
   end;
 end;
@@ -1293,11 +1258,7 @@ begin
           Read_USB_Device_Buffer(8);
           if FT_In_Buffer[7] = _END_BYTE then begin
 
-            if FLogDataInWrite_flag then begin  // testovaci log prijmutych dat
-              LogWrite('Data in: '+IntToHex(FT_In_Buffer[0],2)+' '+IntToHex(FT_In_Buffer[1],2)+' '+ IntToHex(FT_In_Buffer[2],2)+' '+IntToHex(FT_In_Buffer[3],2)
-                +' '+IntToHex(FT_In_Buffer[4],2)+' '+IntToHex(FT_In_Buffer[5],2)+' '+IntToHex(FT_In_Buffer[6],2)
-                +' '+IntToHex(FT_In_Buffer[7],2));
-            end;
+            Self.LogDataIn(8);
 
             case (FT_In_Buffer[0]) and $F0 of
               _MTB_ID: begin
@@ -1307,7 +1268,6 @@ begin
                 FModule[adresa].firmware := IntToHex(FT_In_Buffer[3],2);
                 FModule[adresa].Status := FT_In_Buffer[4];
                 FModule[adresa].Sum := FT_In_Buffer[5];
-                //LogWrite('FW: '+FModule[adresa].firmware);
                 FModule[adresa].available := true;
                 case FModule[adresa].ID and $F0 of
                   MTB_POT_ID:FModule[adresa].typ :=  idMTB_POT_ID;
@@ -1319,40 +1279,27 @@ begin
                   else FModule[adresa].typ := idNone;
                 end;
                 FModule[adresa].CFGnum := FModule[adresa].ID and $0F;
-                LogWrite('Nalezen modul - adresa: '+ IntToStr(adresa) + ' - ' + GetModuleTypeName(adresa)
+                LogWrite(llChange, 'Nalezen modul - adresa: '+ IntToStr(adresa) + ' - ' + GetModuleTypeName(adresa)
                    + ' FW: ' + FModule[adresa].firmware);
               end;
 
               _MTB_SEARCH_END: begin
                 pocetModulu := FT_In_Buffer[1];
-                FOpenned := True;
                 FScan_flag := false;
                 FSeznam_flag := True;
-                LogWrite('Ukonèeno hledání modulù');
+                LogWrite(llChange, 'Ukonèeno hledání modulù');
                 if FModuleCount <> pocetModulu then begin
+                  FOpenned := True;
                   FModuleCount := 0;
-                  LogWrite('nespravný poèet nalezených modulù');
-                end;
-
-                if Assigned(AfterOpen) then AfterOpen(Self);
-
-                (*
-                if pocetModulu > 0 then begin
-                  FOpenned := True;
-                  FScan_flag := false;
+                  WriteError(MTB_INVALID_MODULES_COUNT, _DEFAULT_ERR_ADDR);
+                  LogWrite(llError, 'Nespravný poèet nalezených modulù');
+                  Self.Close();
+                end else
                   if Assigned(AfterOpen) then AfterOpen(Self);
-                  FSeznam_flag := True;
-                  LogWrite('Ukonèeno hledání modulù');
-                end else begin
-                  FOpenned := True;
-                  LogWrite('Ukonèeno hledání modulù - nenalezen žádný modul');
-                  Close;
-                end;
-                *)
               end;
 
               _RST_OK: begin
-    //            FHWVersion := IntToHex(FT_In_Buffer[2], 2);
+
               end;
 
               _USB_CFGQ: begin
@@ -1361,34 +1308,30 @@ begin
                     FHWVersion_Major := FT_In_Buffer[3];
                     FHWVersion_Minor := FT_In_Buffer[4];
                     FHWVersion_Release := FT_In_Buffer[5];
-                    // FHWVersion := IntToHex(FT_In_Buffer[3], 2); // stara verze
                     FHWVersion := IntToStr(FHWVersion_Major)+'.'+IntToStr(FHWVersion_Minor)+'.'+IntToStr(FHWVersion_Release);
                     FHWVersionInt := StrToInt(Format('%d%.2d%.2d',[FHWVersion_Major, FHWVersion_Minor, FHWVersion_Release]));
-                    LogWrite('Verze FW: '+FHWVersion);
+                    LogWrite(llChange, 'Verze FW: '+FHWVersion);
                   end;
                   11:begin
                     FXRamAddr := (FT_In_Buffer[3]*256)+FT_In_Buffer[4];
                     FXRamValue := FT_In_Buffer[5];
-                    LogWrite('XRamRD: '+IntToStr(FXRamAddr)+':'+IntToStr(FXRamValue));
+                    LogWrite(llChange, 'XRamRD: '+IntToStr(FXRamAddr)+':'+IntToStr(FXRamValue));
                   end;
                 end;
-                // ostatni navratove hodnoty doplnit pozdeji
-                //Beep;
               end;
               _ERR_CODE: begin
                 FErrAddress := (FT_In_Buffer[1]);
                 errId := (FT_In_Buffer[2]);
-                LogWrite('Chyba '+intToStr(errId)+' addr: '+IntToStr(FT_In_Buffer[1])+' - '+ IntToHex(FT_In_Buffer[1],2)+' '+IntToHex(FT_In_Buffer[2],2)
+                LogWrite(llError, 'Chyba '+intToStr(errId)+' addr: '+IntToStr(FT_In_Buffer[1])+' - '+ IntToHex(FT_In_Buffer[1],2)+' '+IntToHex(FT_In_Buffer[2],2)
                   +' '+IntToHex(FT_In_Buffer[3],2)+' '+IntToHex(FT_In_Buffer[4],2)+' '+IntToHex(FT_In_Buffer[5],2)
                   +' '+IntToHex(FT_In_Buffer[6],2)+' '+IntToHex(FT_In_Buffer[7],2));
                 Self.WriteError(errId, FErrAddress);
               end;
             end;
             Get_USB_Device_QueueStatus;
-            //if FOpenned then Get_USB_Device_QueueStatus;
           end else begin // kontrola paketu
             FDataInputErr := True; // prisel chybný paket
-              LogWrite('Chyba pøijmutého paketu: '+IntToHex(FT_In_Buffer[0],2)
+              LogWrite(llError, 'Chyba pøijmutého paketu: '+IntToHex(FT_In_Buffer[0],2)
                  +' '+IntToHex(FT_In_Buffer[1],2)+' '+IntToHex(FT_In_Buffer[2],2)
                  +' '+IntToHex(FT_In_Buffer[3],2)+' '+IntToHex(FT_In_Buffer[4],2)
                  +' '+IntToHex(FT_In_Buffer[5],2)+' '+IntToHex(FT_In_Buffer[6],2)
@@ -1397,7 +1340,7 @@ begin
         end;  // while
         if FDataInputErr then begin
           FScan_flag := false;
-          LogWrite('Chyba paketu pri scan modulu');
+          LogWrite(llError, 'Chyba paketu pri scan modulu');
           FOpenned := False;
           FScan_flag := False;
           Purge_USB_Device_Out;
@@ -1431,10 +1374,7 @@ begin
             if FT_In_Buffer[i*8+7] = _END_BYTE then begin
 
               if ((FT_In_Buffer[i*8] and $F0) <> _USB_CFGQ) and (FT_In_Buffer[i*8+2] <> 21) then begin
-                if FLogDataInWrite_flag then begin  // testovaci log prijmutych dat
-                  LogWrite('Data in: '+IntToHex(FT_In_Buffer[i*8+0],2)+' '+IntToHex(FT_In_Buffer[i*8+1],2)+' '+ IntToHex(FT_In_Buffer[i*8+2],2)+' '+IntToHex(FT_In_Buffer[i*8+3],2)
-                    +' '+IntToHex(FT_In_Buffer[i*8+4],2)+' '+IntToHex(FT_In_Buffer[i*8+5],2)+' '+IntToHex(FT_In_Buffer[i*8+6],2)+' '+IntToHex(FT_In_Buffer[i*8+7],2));
-                end;
+                LogDataIn(8, i*8);
               end;
 
               case (FT_In_Buffer[i*8] and $F0) of
@@ -1444,33 +1384,17 @@ begin
                       FHWVersion_Major := FT_In_Buffer[i*8+3];
                       FHWVersion_Minor := FT_In_Buffer[i*8+4];
                       FHWVersion_Release := FT_In_Buffer[i*8+5];
-                      // FHWVersion := IntToHex(FT_In_Buffer[3], 2); // stara verze
                       FHWVersion := IntToStr(FHWVersion_Major)+'.'+IntToStr(FHWVersion_Minor)+'.'+IntToStr(FHWVersion_Release);
-                      LogWrite('Verze FW: '+FHWVersion);
-                      //FHWVersion := IntToHex(FT_In_Buffer[i*8+3], 2);
-                      //LogWrite('Verze FW: '+FHWVersion);
-                      LogWrite('_USB_CFGQ: '+' - '+ IntToHex(FT_In_Buffer[i*8],2)+' '+ IntToHex(FT_In_Buffer[i*8+1],2)+' '+IntToHex(FT_In_Buffer[i*8+2],2)
+                      LogWrite(llChange, 'Verze FW: '+FHWVersion);
+                      LogWrite(llRawCmd, '_USB_CFGQ: '+' - '+ IntToHex(FT_In_Buffer[i*8],2)+' '+ IntToHex(FT_In_Buffer[i*8+1],2)+' '+IntToHex(FT_In_Buffer[i*8+2],2)
                         +' '+IntToHex(FT_In_Buffer[i*8+3],2)+' '+IntToHex(FT_In_Buffer[i*8+4],2)+' '+IntToHex(FT_In_Buffer[i*8+5],2)
                         +' '+IntToHex(FT_In_Buffer[i*8+6],2)+' '+IntToHex(FT_In_Buffer[i*8+7],2));
                     end;
                     21:begin  // Pocet prikazu
                       FCmdCount := FT_In_Buffer[i*8+4] OR FT_In_Buffer[i*8+3] * $100;
                       FCmdCounter_flag := True;
-                      (*
-                      CmdCountNew := FT_In_Buffer[i*8+4] OR FT_In_Buffer[i*8+3] * $100;
-                      if CmdCountNew < FCmdCountOld then begin
-                        FCmdCount := CmdCountNew+65535-FCmdCountOld;
-                      end else begin
-                        FCmdCount := CmdCountNew - FCmdCountOld;
-                      end;
-                      FCmdCountOld := CmdCountNew;
-                      if FCmdCount < 1000 then begin
-                        FCmdCounter_flag := True;
-                        //LogWrite('Cmd/sec: '+IntToStr(FCmdCount));
-                      end;
-                      *)
                     end else begin
-                      LogWrite('_USB_CFGQ ?: '+' - '+ IntToHex(FT_In_Buffer[i*8],2)+' '+ IntToHex(FT_In_Buffer[i*8+1],2)+' '+IntToHex(FT_In_Buffer[i*8+2],2)
+                      LogWrite(llRawCmd, '_USB_CFGQ ?: '+' - '+ IntToHex(FT_In_Buffer[i*8],2)+' '+ IntToHex(FT_In_Buffer[i*8+1],2)+' '+IntToHex(FT_In_Buffer[i*8+2],2)
                         +' '+IntToHex(FT_In_Buffer[i*8+3],2)+' '+IntToHex(FT_In_Buffer[i*8+4],2)+' '+IntToHex(FT_In_Buffer[i*8+5],2)
                         +' '+IntToHex(FT_In_Buffer[i*8+6],2)+' '+IntToHex(FT_In_Buffer[i*8+7],2));
                     end;
@@ -1485,22 +1409,16 @@ begin
                   mdata[1] := FT_In_Buffer[i*8+3];
                   mdata[2] := FT_In_Buffer[i*8+4];
                   mdata[3] := FT_In_Buffer[i*8+5];
-                  //LogWrite('status:'+IntToStr(FT_In_Buffer[i*8+datNum]));
-                  if FModule[adresa].Status <> FT_In_Buffer[i*8+datNum-1] then begin
-                    //LogWrite(' test status:'+IntToStr(FT_In_Buffer[i*8+datNum]));
-                  end;
 
                   FModule[adresa].Sum := FT_In_Buffer[i*8+datNum];
                   FModule[adresa].Status := FT_In_Buffer[i*8+datNum-1];
                   if (datNum>3) then begin
-                    //LogWrite('_MTB_DATA '+IntToStr(adresa));
                     case (FModule[adresa].typ) of
                       // vyhodnoceni prijatych dat
                       // moduly I/O
                       idMTB_UNI_ID,idMTB_TTL_ID: begin
                         inDataOld1 := FModule[adresa].Input.value;
                         inDataNew1 := FT_In_Buffer[i*8+2] OR FT_In_Buffer[i*8+3] * $100;
-                        //LogWrite('In '+IntToStr(adresa)+'  '+ IntToStr(inDataOld1)+' x '+IntToStr(inDataNew1));
                         if inDataNew1 <> inDataOld1 then begin
                           FModule[adresa].Input.changed := true;
                           for j := 0 to 15 do begin
@@ -1517,24 +1435,14 @@ begin
                                 FPortIn[adresa*16+j].inUp := True;
                                 FPortIn[adresa*16+j].inDn  :=  False;
                               end;
-                            end else begin
-                              //FPortIn[adresa*16+j].inUp := False;
-                              //FPortIn[adresa*16+j].inDn := False;
                             end;
                           end;
                           FModule[adresa].Input.value := inDataNew1;
                         end;
-                        (*
-                        if ((FModule[adresa].Input.value AND $00FF) = FT_In_Buffer[i*8+2]     ) then FModule[adresa].Input.changed := true;
-                        if ((FModule[adresa].Input.value AND $FF00) = FT_In_Buffer[i*8+3]*$100) then FModule[adresa].Input.changed := true;
-                        FModule[adresa].Input.value := FT_In_Buffer[i*8+2];
-                        FModule[adresa].Input.value := FModule[adresa].Input.value OR FT_In_Buffer[i*8+3] * $100;
-                        *)
                       end;
                       // potenciometry
                       idMTB_POT_ID: begin
                         // channel n+0
-                        //LogWrite('Pot '+IntToStr(adresa)+' - '+ IntToHex(mdata[0],2)+' '+ IntToHex(mdata[1],2)+' '+ IntToHex(mdata[2],2));
                         channel := (adresa - _POT_ADDR)*4; // vypocita channel
                         potValue := (mdata[0] and 15);
                         potDirect:= (mdata[2] and 1);
@@ -1542,7 +1450,6 @@ begin
                           FPot[channel].PotValue := potValue;
                           FPot[channel].PotDirect:= potDirect;
                           FModule[adresa].Input.changed := true;
-                          //LogWrite('PotCh '+IntToStr(channel)+'  '+ IntToStr(potValue)+' x '+IntToStr(potDirect));
                         end;
                         // channel n+1
                         Inc(channel);
@@ -1552,7 +1459,6 @@ begin
                           FPot[channel].PotValue := potValue;
                           FPot[channel].PotDirect:= potDirect;
                           FModule[adresa].Input.changed := true;
-                          //LogWrite('PotCh '+IntToStr(channel)+'  '+ IntToStr(potValue)+' x '+IntToStr(potDirect));
                         end;
                         // channel n+2
                         Inc(channel);
@@ -1562,7 +1468,6 @@ begin
                           FPot[channel].PotValue := potValue;
                           FPot[channel].PotDirect:= potDirect;
                           FModule[adresa].Input.changed := true;
-                          //LogWrite('PotCh '+IntToStr(channel)+'  '+ IntToStr(potValue)+' x '+IntToStr(potDirect));
                         end;
                         // channel n+3
                         Inc(channel);
@@ -1572,15 +1477,13 @@ begin
                           FPot[channel].PotValue := potValue;
                           FPot[channel].PotDirect:= potDirect;
                           FModule[adresa].Input.changed := true;
-                          //LogWrite('PotCh '+IntToStr(channel)+'  '+ IntToStr(potValue)+' x '+IntToStr(potDirect));
                         end;
                       end;
-                      // regulatory - overit funkcnost
+                      // regulatory
                       idMTB_REGP_ID: begin
                         channel := (adresa - _REG_ADDR)*8;
                         inDataOld1 := FModule[adresa].Input.value;
                         inDataNew1 := FT_In_Buffer[i*8+2] OR FT_In_Buffer[i*8+3] * $100;
-                        //LogWrite('OverIn '+IntToStr(adresa)+'  '+ IntToStr(inDataOld1)+' x '+IntToStr(inDataNew1));
                         if inDataNew1 <> inDataOld1 then begin
                           FModule[adresa].Input.changed := true;
                           for j := 0 to 7 do begin
@@ -1590,39 +1493,30 @@ begin
                                 // 1 -> 0
                                 FRegOver[channel+j].value :=  False;
                                 FRegOver[channel+j].inUp := False;
-                                //LogWrite('OverIn chann: '+IntToStr(channel+j)+'  set 0');
-                                //FRegOver[channel+j].inDn  :=  True;
                               end else begin
                                 // 0 -> 1
                                 FRegOver[channel+j].value :=  True;
                                 FRegOver[channel+j].inUp := True;
-                                //LogWrite('OverIn chann: '+IntToStr(channel+j)+'  set 1');
-                                //FRegOver[channel+j].inDn  :=  False;
                               end;
-                            end else begin
-                              //FRegOver[channel+j].inUp := False;
-                              //FRegOver[channel+j].inDn := False;
                             end;
                           end;
                           FModule[adresa].Input.value := inDataNew1
                         end;
                       end;
                     end;  // case module typ
-                    //LogWrite('Status >2B sddr: '+IntToStr(adresa)+'  status: '+IntToStr(FModule[adresa].Status));
                   end else
                   if datNum = 3 then begin   // upravit po zmene FW
                     // jen odpoved po prikazu (adresa, status a SUM)
                     odpoved := true;
-                    //LogWrite('Status <3B sddr: '+IntToStr(adresa)+'  status: '+IntToStr(FModule[adresa].Status));
                     // doplnit kontrolu statusu
                   end else begin  // doslo mene nez 3 data
-                    LogWrite('Status <3B addr: '+IntToStr(adresa)+'  status: '+IntToStr(FModule[adresa].Status));
+                    LogWrite(llCmd, 'Status <3B addr: '+IntToStr(adresa)+'  status: '+IntToStr(FModule[adresa].Status));
                   end;
                 end;
                 _ERR_CODE: begin
                   FErrAddress := (FT_In_Buffer[(i*8)+1]);
                   errId := (FT_In_Buffer[(i*8)+2]);
-                  LogWrite('Chyba '+intToStr(errId)+' addr: '+IntToStr(FT_In_Buffer[i*8+1])+' - '+ IntToHex(FT_In_Buffer[i*8+1],2)+' '+IntToHex(FT_In_Buffer[i*8+2],2)
+                  LogWrite(llError, 'Chyba '+intToStr(errId)+' addr: '+IntToStr(FT_In_Buffer[i*8+1])+' - '+ IntToHex(FT_In_Buffer[i*8+1],2)+' '+IntToHex(FT_In_Buffer[i*8+2],2)
                     +' '+IntToHex(FT_In_Buffer[i*8+3],2)+' '+IntToHex(FT_In_Buffer[i*8+4],2)+' '+IntToHex(FT_In_Buffer[i*8+5],2)
                     +' '+IntToHex(FT_In_Buffer[i*8+6],2)+' '+IntToHex(FT_In_Buffer[i*8+7],2));
                   case errId of
@@ -1640,7 +1534,6 @@ begin
                           inDataOld1 := FModule[adresa].Input.value;
                           //inDataNew1 := FT_In_Buffer[i*8+2] OR FT_In_Buffer[i*8+3] * $100;
                           inDataNew1 := 0;
-                          //LogWrite('In '+IntToStr(adresa)+'  '+ IntToStr(inDataOld1)+' x '+IntToStr(inDataNew1));
                           if inDataNew1 <> inDataOld1 then begin
                             FModule[adresa].Input.changed := true;
                             for j := 0 to 15 do begin
@@ -1657,9 +1550,6 @@ begin
                                   FPortIn[adresa*16+j].inUp := True;
                                   FPortIn[adresa*16+j].inDn  :=  False;
                                 end;
-                              end else begin
-                                //FPortIn[adresa*16+j].inUp := False;
-                                //FPortIn[adresa*16+j].inDn := False;
                               end;
                             end;
                             FModule[adresa].Input.value := inDataNew1
@@ -1668,7 +1558,6 @@ begin
                         // potenciometry
                         idMTB_POT_ID: begin
                           // channel n+0
-                          //LogWrite('Pot '+IntToStr(adresa)+' - '+ IntToHex(mdata[0],2)+' '+ IntToHex(mdata[1],2)+' '+ IntToHex(mdata[2],2));
                           channel := (adresa - _POT_ADDR)*4; // vypocita channel
                           potValue := 0;
                           potDirect:= 0;
@@ -1676,7 +1565,6 @@ begin
                             FPot[channel].PotValue := potValue;
                             FPot[channel].PotDirect:= potDirect;
                             FModule[adresa].Input.changed := true;
-                            //LogWrite('PotCh '+IntToStr(channel)+'  '+ IntToStr(potValue)+' x '+IntToStr(potDirect));
                           end;
                           // channel n+1
                           Inc(channel);
@@ -1686,7 +1574,6 @@ begin
                             FPot[channel].PotValue := potValue;
                             FPot[channel].PotDirect:= potDirect;
                             FModule[adresa].Input.changed := true;
-                            //LogWrite('PotCh '+IntToStr(channel)+'  '+ IntToStr(potValue)+' x '+IntToStr(potDirect));
                           end;
                           // channel n+2
                           Inc(channel);
@@ -1696,7 +1583,6 @@ begin
                             FPot[channel].PotValue := potValue;
                             FPot[channel].PotDirect:= potDirect;
                             FModule[adresa].Input.changed := true;
-                            //LogWrite('PotCh '+IntToStr(channel)+'  '+ IntToStr(potValue)+' x '+IntToStr(potDirect));
                           end;
                           // channel n+3
                           Inc(channel);
@@ -1706,7 +1592,6 @@ begin
                             FPot[channel].PotValue := potValue;
                             FPot[channel].PotDirect:= potDirect;
                             FModule[adresa].Input.changed := true;
-                            //LogWrite('PotCh '+IntToStr(channel)+'  '+ IntToStr(potValue)+' x '+IntToStr(potDirect));
                           end;
                         end;
                         // regulatory - overit funkcnost
@@ -1714,7 +1599,6 @@ begin
                           channel := (adresa - _REG_ADDR)*8;
                           inDataOld1 := FModule[adresa].Input.value;
                           inDataNew1 := 0;
-                          //LogWrite('OverIn '+IntToStr(adresa)+'  '+ IntToStr(inDataOld1)+' x '+IntToStr(inDataNew1));
                           if inDataNew1 <> inDataOld1 then begin
                             FModule[adresa].Input.changed := true;
                             for j := 0 to 7 do begin
@@ -1724,18 +1608,11 @@ begin
                                   // 1 -> 0
                                   FRegOver[channel+j].value :=  False;
                                   FRegOver[channel+j].inUp := False;
-                                  //LogWrite('OverIn chann: '+IntToStr(channel+j)+'  set 0');
-                                  //FRegOver[channel+j].inDn  :=  True;
                                 end else begin
                                   // 0 -> 1
                                   FRegOver[channel+j].value :=  True;
                                   FRegOver[channel+j].inUp := True;
-                                  //LogWrite('OverIn chann: '+IntToStr(channel+j)+'  set 1');
-                                  //FRegOver[channel+j].inDn  :=  False;
                                 end;
-                              end else begin
-                                //FRegOver[channel+j].inUp := False;
-                                //FRegOver[channel+j].inDn := False;
                               end;
                             end;
                             FModule[adresa].Input.value := inDataNew1
@@ -1760,39 +1637,11 @@ begin
                   end;
 
                   Self.WriteError(errId, FErrAddress);
-
-                  (*
-                  case (FT_In_Buffer[(i*8)+2]) of
-                    11: begin
-                      LogWrite('Chyba 11 FB addr: '+IntToStr(FT_In_Buffer[i*8+1])+' - '+ IntToHex(FT_In_Buffer[i*8+1],2)+' '+IntToHex(FT_In_Buffer[i*8+4],2)
-                        +' '+IntToHex(FT_In_Buffer[i*8+3],2)+' '+IntToHex(FT_In_Buffer[i*8+4],2)+' '+IntToHex(FT_In_Buffer[i*8+5],2)
-                        +' '+IntToHex(FT_In_Buffer[i*8+6],2)+' '+IntToHex(FT_In_Buffer[i*8+7],2));
-                      if Assigned(onError) then OnError(self, 101, FErrAddress);
-                    end;
-                    1: begin
-                      LogWrite('Chyba 01 CMD addr: '+IntToStr(FT_In_Buffer[i*8+1])+' - '+ IntToHex(FT_In_Buffer[i*8+1],2)+' '+IntToHex(FT_In_Buffer[i*8+4],2)
-                        +' '+IntToHex(FT_In_Buffer[i*8+3],2)+' '+IntToHex(FT_In_Buffer[i*8+4],2)+' '+IntToHex(FT_In_Buffer[i*8+5],2)
-                        +' '+IntToHex(FT_In_Buffer[i*8+6],2)+' '+IntToHex(FT_In_Buffer[i*8+7],2));
-                      if Assigned(onError) then OnError(self, 102, FErrAddress);
-                    end;
-                    2: begin
-                      LogWrite('Chyba 02 CMD addr: '+IntToStr(FT_In_Buffer[i*8+1])+' - '+ IntToHex(FT_In_Buffer[i*8+1],2)+' '+IntToHex(FT_In_Buffer[i*8+4],2)
-                        +' '+IntToHex(FT_In_Buffer[i*8+3],2)+' '+IntToHex(FT_In_Buffer[i*8+4],2)+' '+IntToHex(FT_In_Buffer[i*8+5],2)
-                        +' '+IntToHex(FT_In_Buffer[i*8+6],2)+' '+IntToHex(FT_In_Buffer[i*8+7],2));
-                      if Assigned(onError) then OnError(self, 103, FErrAddress);
-                    end else begin
-                      LogWrite('Chyba ?? addr: '+IntToStr(FT_In_Buffer[i*8+1])+' - '+ IntToHex(FT_In_Buffer[i*8+1],2)+' '+IntToHex(FT_In_Buffer[i*8+4],2)
-                        +' '+IntToHex(FT_In_Buffer[i*8+3],2)+' '+IntToHex(FT_In_Buffer[i*8+4],2)+' '+IntToHex(FT_In_Buffer[i*8+5],2)
-                        +' '+IntToHex(FT_In_Buffer[i*8+6],2)+' '+IntToHex(FT_In_Buffer[i*8+7],2));
-                      if Assigned(onError) then OnError(self, 200, FErrAddress);
-                    end;
-                  end;
-                  *)
                 end;
               end; // case
             end else begin
               FDataInputErr := True;
-              LogWrite('Chyba pøijmutého paketu: '+IntToHex(FT_In_Buffer[i*8+0],2)
+              LogWrite(llError, 'Chyba pøijmutého paketu: '+IntToHex(FT_In_Buffer[i*8+0],2)
                  +' '+IntToHex(FT_In_Buffer[i*8+1],2)+' '+IntToHex(FT_In_Buffer[i*8+2],2)
                  +' '+IntToHex(FT_In_Buffer[i*8+3],2)+' '+IntToHex(FT_In_Buffer[i*8+4],2)
                  +' '+IntToHex(FT_In_Buffer[i*8+5],2)+' '+IntToHex(FT_In_Buffer[i*8+6],2)
@@ -1807,7 +1656,7 @@ begin
               if IsModuleConfigured(i) then begin
                 case FModule[i].typ of
                   idMTB_UNI_ID,idMTB_UNIOUT_ID,idMTB_TTL_ID,idMTB_TTLOUT_ID:begin
-                    LogWrite('obnovit data na vystup adr:'+IntToStr(i));
+                    LogWrite(llCmd, 'obnovit data na vystup adr:'+IntToStr(i));
                     FModule[i].revived := False;
                     FModule[i].failure := False;
                     // uni - vystup
@@ -1829,11 +1678,6 @@ begin
                 mdata[1] := __IDLE;
                 MT_send_packet(mdata, 2);
               end;
-            end else begin
-              (*
-              if not FModule[i].failure then begin
-                LogWrite('osetrit err254 adr:'+IntToStr(i));
-              end; *)
             end;
           end;
         end;
@@ -1878,10 +1722,8 @@ begin
                 fl55:mdata[2] := mdata[2] or $40;
                 else mdata[2] := mdata[2] or $0;
               end;
-              //LogWrite('Flick :'+IntToStr(mdata[0])+' '+IntToHex(mdata[1],2)+' '+IntToHex(mdata[2],2));
               MT_send_packet(mdata, 3);
               FPortOut[i].flickChange := False;
-              //mdata[2] := (8 * 1) or (mdata[0] and 7) or ((mdata[0] and 8) shl 1);
             end;
           end;
         end;
@@ -1944,13 +1786,13 @@ begin
       end; // FScaning
 
       if Assigned(OnScan) then OnScan(Self);
-     // Pøi zmìnì vyvolá událost
+      // Pøi zmìnì vyvolá událost
       if (changed AND Assigned(OnChange)) then OnChange(Self);
     end;
   except
    // jen pro jistotu
    on e:Exception do
-     Self.LogWrite('ERR: Vyjímka MtbScan : '+e.Message);
+     Self.LogWrite(llError, 'ERR: Vyjímka MtbScan : '+e.Message);
   end;
 end;
 
@@ -1999,8 +1841,8 @@ begin
   Self.LogDataOut(1);
   Write_USB_Device_Buffer(1);
 
-  LogWrite('Otevøení zaøízení: ' + UsbSerial);
-  LogWrite('Driver v' + GetDriverVersion);
+  LogWrite(llCmd, 'Otevøení zaøízení: ' + UsbSerial);
+  LogWrite(llCmd, 'Driver v' + GetDriverVersion);
 end;
 
 // uzavre zarizeni
@@ -2016,8 +1858,7 @@ begin
   Close_USB_Device;
   FTimer.Enabled := false;
   FOpenned := false;
-  LogWrite('***** Uzavøení zaøízení *****');
-  LogWrite('-----------------------------');
+  LogWrite(llCmd, 'Uzavøení zaøízení');
   if Assigned(AfterClose) then AfterClose(Self);
 end;
 
@@ -2108,8 +1949,8 @@ begin
   Write_USB_Device_Buffer(1);
 
   FScanning := true;
-  LogWrite('----- Spuštìní komunikace -----');
-  LogWrite('Speed: '+ IntToStr(GetSpeedStr)+'bd     ScanInterval: ' + IntToStr(ord(ScanInterval)));
+  LogWrite(llChange, 'Spuštìní komunikace');
+  LogWrite(llChange, 'Speed: '+ IntToStr(GetSpeedStr)+'bd     ScanInterval: ' + IntToStr(ord(ScanInterval)));
   GetCmdNum;
 
   if (Assigned(AfterStart)) then AfterStart(Self);
@@ -2131,7 +1972,7 @@ begin
   Write_USB_Device_Buffer(1);
 
   FScanning := false;
-  LogWrite('----- Zastavení komunikace -----');
+  LogWrite(llChange, 'Zastavení komunikace');
   Setpriorityclass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
   // vynulovat hodnoty !! doplnit asi !!
   for i := 1 to _MTB_MAX_ADDR do begin
@@ -2141,18 +1982,13 @@ begin
   if (Assigned(AfterStop)) then AfterStop(Self);
 end;
 
-constructor TMTBusb.Create(AOwner : TComponent;MyDir:string);
-var
-  k: word;
-  ini : TMemIniFile;
-  n1 : string;
-
+constructor TMTBusb.Create(AOwner: TComponent;MyDir:string);
 begin
   inherited Create(AOwner);
 
   // Default hodnoty
   FDriverVersion := GetDriverVersion;
-  LogWriting := True;
+  FLogLevel := logLevel;
 
   FOpenned := false;
   FScanning := false;
@@ -2168,63 +2004,16 @@ begin
 
   FMyDir := MyDir;
   FDataDir := MyDir + '\data';
-  FLogDir := MyDir + '\mtblog';
 
-  DateTimeToString(n1,'YYYY-MM-DD',Now);
-  FLogFileName := FLogDir + '\' + n1 + '.log';
+  CreateDir(MyDir);
+  CreateDir(FDataDir);
 
-  if not DirectoryExists(MyDir) then
-    if not CreateDir(MyDir) then
-    raise Exception.Create('Cannot create '+MyDir);
+  Self.LoadConfig(FDataDir+'/'+_CONFIG_FN);
 
-  if not DirectoryExists(FDataDir) then
-    if not CreateDir(FDataDir) then
-    raise Exception.Create('Cannot create '+FDataDir);
-
-  if not DirectoryExists(FLogDir) then
-    if not CreateDir(FLogDir) then
-    raise Exception.Create('Cannot create '+FLogDir);
-
-  ini := TMemIniFile.Create(FDataDir + '\mtbcfg.ini');
-  for k := 1 to _MTB_MAX_ADDR do
-  begin
-      n1 := 'Modul '+intToStr(k);
-      Self.SetCfg(k,ini.ReadInteger(n1,'cfg',0));
-      FModule[k].setting := ini.ReadInteger(n1,'setting',1);
-      FModule[k].popis := ini.ReadString(n1,'popis','');
-  end;
-  Self.FSpeed                 := TMtbSpeed(ini.ReadInteger('MTB','speed',4));
-  Self.FScanInterval          := TTimerInterval(ini.ReadInteger('MTB','timer',100));
-  Self.FusbName               := ini.ReadString('MTB','device',_DEFAULT_USB_NAME);
-  Self.FLogWrite_flag         := ini.ReadBool('MTB','LogData', false);
-  Self.FLogDataOutWrite_flag  := ini.ReadBool('MTB','LogDataOutWriting',false);
-  Self.FLogDataInWrite_flag   := ini.ReadBool('MTB','LogDataInWriting',false);
-  ini.Free;
-
-  // pokud neexistuje konfiguraèní soubor, tak je vytvoøen
-  if not FileExists(FDataDir + '\mtbcfg.ini') then begin
-    // Ulozeni CFG udaju modulu
-    ini := TMemIniFile.Create(FDataDir+'\mtbcfg.ini');
-    for k := 1 to _MTB_MAX_ADDR do
-    begin
-        n1 := 'Modul '+intToStr(k);
-        ini.WriteInteger(n1,'cfg',Self.GetCfg(k));
-        ini.WriteInteger(n1,'setting',FModule[k].Setting);
-        ini.WriteString(n1,'popis',FModule[k].popis);
-    end;
-    ini.WriteInteger('MTB','speed',Integer(Self.FSpeed));
-    ini.WriteInteger('MTB','timer',Integer(Self.FScanInterval));
-    ini.WriteString('MTB','device',Self.FusbName);
-    ini.UpdateFile;
-    ini.Free;
-  end;
-
-
- ErrorCallBack := Self.FTunit_error;
+  ErrorCallBack := Self.FTunit_error;
 end;
 
 destructor TMTBusb.Destroy;
-var ini:TMemIniFile;
 begin
   if (FScanning and FOpenned) then begin
     FT_Out_Buffer[0] := _COM_OFF;                  // zastavení skenování
@@ -2232,38 +2021,90 @@ begin
   end;
   if (FOpenned) then Self.Close();
 
-  //ulozeni mtbcfg.ini
-  ini := TMemIniFile.Create(FDataDir + '\mtbcfg.ini');
-  ini.WriteInteger('MTB','speed',Integer(Self.FSpeed));
-  ini.WriteInteger('MTB','timer',Integer(Self.FScanInterval));
-  ini.WriteString('MTB','device',Self.FusbName);
-  ini.WriteBool('MTB','LogData',Self.FLogWrite_flag);
-  ini.WriteBool('MTB','LogDataOutWriting',Self.FLogDataOutWrite_flag);
-  ini.WriteBool('MTB','LogDataInWriting',Self.FLogDataInWrite_flag);
-  ini.UpdateFile();
-  ini.Free;
+  Self.SaveConfig(FDataDir+'\'+_CONFIG_FN);
 
-  //Timer.Destroy;
-  //LogWrite('##### Ukonèení programu #####');
   inherited;
 end;
 
 procedure TMTBusb.FTunit_error(Error:Integer; Description: string);
 begin
- Self.LogWrite('ERR: '+Description);
+ Self.LogWrite(llError, 'ERR: '+Description);
  Self.WriteError(300+Error, 255);
 end;//procedure
 
+////////////////////////////////////////////////////////////////////////////////
+
 procedure TMTBusb.LogDataOut(bufLen:Integer);
+var s:string;
+    i:Integer;
 begin
- // TODO
+ for i := 0 to bufLen-1 do
+   s := s + IntToHex(FT_Out_Buffer[i], 2) + ' ';
+ Self.LogWrite(llRawCmd, 'DATA OUT: '+s);
+end;
+
+procedure TMTBusb.LogDataIn(bufLen:Integer; bufStart:Integer = 0);
+var s:string;
+    i:Integer;
+begin
+ for i := 0 to bufLen-1 do
+   s := s + IntToHex(FT_In_Buffer[i], 2) + ' ';
+ Self.LogWrite(llRawCmd, 'DATA IN: '+s);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-initialization
+procedure TMTBusb.LoadConfig(fn:string);
+var ini:TMemIniFile;
+    i:Integer;
+    name:string;
+begin
+ try
+   ini := TMemIniFile.Create(fn);
+ except
+   Exit();
+ end;
 
-finalization
-  FreeAndNil(MTBdrv);
+ for i := 1 to _MTB_MAX_ADDR do
+ begin
+  name := 'Modul '+intToStr(i);
+  Self.SetCfg(i, ini.ReadInteger(name, 'cfg', 0));
+  FModule[i].setting := ini.ReadInteger(name, 'setting', 1);
+  FModule[i].popis := ini.ReadString(name, 'popis', '');
+ end;
+ Self.FSpeed        := TMtbSpeed(ini.ReadInteger('MTB', 'speed', 4));
+ Self.FScanInterval := TTimerInterval(ini.ReadInteger('MTB', 'timer', 100));
+ Self.FusbName      := ini.ReadString('MTB', 'device', _DEFAULT_USB_NAME);
+ Self.FLogLevel     := TLogLevel(ini.ReadInteger('MTB', 'LogLevel', Integer(llNo)));
+ ini.Free;
+end;
+
+procedure TMTBusb.SaveConfig(fn:string);
+var ini:TMemIniFile;
+    i:Integer;
+    name:string;
+begin
+ try
+  ini := TMemIniFile.Create(fn);
+ except
+  Exit();
+ end;
+
+ for i := 1 to _MTB_MAX_ADDR do
+ begin
+  name := 'Modul '+intToStr(i);
+  ini.WriteInteger(name, 'cfg', Self.GetCfg(i));
+  ini.WriteInteger(name, 'setting', FModule[i].Setting);
+  ini.WriteString(name, 'popis', FModule[i].popis);
+ end;
+
+ ini.WriteInteger('MTB', 'speed', Integer(Self.FSpeed));
+ ini.WriteInteger('MTB', 'timer', Integer(Self.FScanInterval));
+ ini.WriteString('MTB', 'device', Self.FusbName);
+ ini.UpdateFile;
+ ini.Free;
+end;
+
+////////////////////////////////////////////////////////////////////////////////
 
 end.

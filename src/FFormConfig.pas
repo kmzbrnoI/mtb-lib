@@ -71,12 +71,10 @@ type
     LV_Log: TListView;
     Label3: TLabel;
     Label4: TLabel;
-    CHB_LogOut: TCheckBox;
-    CHB_LogIn: TCheckBox;
-    CHB_Logging: TCheckBox;
     B_DeleteNonExist: TButton;
+    L_LogLevel: TLabel;
+    CB_LogLevel: TComboBox;
     procedure b_ScanBrdClick(Sender: TObject);
-    procedure b_ScanModClick(Sender: TObject);
     procedure lv_modulesDblClick(Sender: TObject);
     procedure cb_mtbNameChange(Sender: TObject);
     procedure pm_mod_nastaveniClick(Sender: TObject);
@@ -87,10 +85,7 @@ type
     procedure cb_speedChange(Sender: TObject);//cteni verze z nastaveni
 
     procedure OnScanned(Sender:TObject);
-    procedure OnChange(Sender:TObject);
     procedure OnError(Sender: TObject; errValue: word; errAddr: byte);
-    procedure OnInputChanged(Sender: TObject; module: byte);
-    procedure OnOutputChanged(Sender: TObject; module: byte);
 
     procedure BeforeOpen(Sender:TObject);
     procedure AfterOpen(Sender:TObject);
@@ -107,10 +102,8 @@ type
     procedure PM_CloseClick(Sender: TObject);
     procedure LV_LogCustomDrawItem(Sender: TCustomListView; Item: TListItem;
       State: TCustomDrawState; var DefaultDraw: Boolean);
-    procedure CHB_LogOutClick(Sender: TObject);
-    procedure CHB_LogInClick(Sender: TObject);
-    procedure CHB_LoggingClick(Sender: TObject);
     procedure B_DeleteNonExistClick(Sender: TObject);
+    procedure CB_LogLevelChange(Sender: TObject);
   private
 
   public
@@ -123,7 +116,7 @@ var
 implementation
 
 {$R *.dfm}
-uses About, MTBusb, LibraryEvents;
+uses About, MTBusb, LibraryEvents, LibCML;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -136,29 +129,16 @@ begin
  cb_mtbName.Clear;
  cnt := MTBdrv.GetDeviceCount();
  if (cnt > 0) then
-  begin
-   for i := 0 to cnt-1 do cb_mtbName.Items.Add(MTBdrv.GetDeviceSerial(i));
-  end;
-  cb_mtbName.ItemIndex := -1;
+   for i := 0 to cnt-1 do
+     cb_mtbName.Items.Add(MTBdrv.GetDeviceSerial(i));
+ cb_mtbName.ItemIndex := -1;
 
  cb_mtbName.Enabled := true;
 end;
 
-procedure TFormConfig.b_ScanModClick(Sender: TObject);
+procedure TFormConfig.CB_LogLevelChange(Sender: TObject);
 begin
-  if (cb_mtbName.ItemIndex <> -1) then
-   begin
-    TS_Device.Enabled := false;
-    l_modcount.Caption := '?';
-    lv_modules.Clear;
-    lv_modules.Color := clLtGray;
-
-    //this will scan modules
-    MTBdrv.Close();
-    MTBdrv.Open(MTBdrv.UsbSerial);
-   end else begin
-    Application.MessageBox('MTB: ridici deska neni vybrana', 'Nelze vyhledat', MB_OK OR MB_ICONERROR);
-   end;
+ MTBdrv.LogLevel := TLogLevel(Self.CB_LogLevel.ItemIndex);
 end;
 
 procedure TFormConfig.OnScanned(Sender:TObject);
@@ -167,24 +147,24 @@ var
   LI: TListItem;
   cfg:TModulConfigGet;
 begin
-  lv_modules.Color := clWindow;
-  lv_modules.Clear;
-  l_modcount.Caption := IntToStr(MTBdrv.ModuleCount);
-  TS_Device.Enabled := true;
+ lv_modules.Color := clWindow;
+ lv_modules.Clear;
+ l_modcount.Caption := IntToStr(MTBdrv.ModuleCount);
+ TS_Device.Enabled := true;
 
-  for i := 0 to 191 do
-   begin
-    if (not MTBdrv.IsModule(i)) then continue;
+ for i := 0 to _MTB_MAX_ADDR do
+  begin
+   if (not MTBdrv.IsModule(i)) then continue;
 
-    LI := lv_modules.Items.Add;
-    cfg := MTBdrv.GetModuleCfg(i);
-    LI.Caption := cfg.CFGpopis;
+   LI := lv_modules.Items.Add;
+   cfg := MTBdrv.GetModuleCfg(i);
+   LI.Caption := cfg.CFGpopis;
 
-    LI.SubItems.Add(IntToStr(i));
-    LI.SubItems.Add(MTBdrv.GetModuleTypeName(i));
-    LI.SubItems.Add(IntToHex(MTBdrv.GetCfg(i), 8));
-  end;
-end;//procedure
+   LI.SubItems.Add(IntToStr(i));
+   LI.SubItems.Add(MTBdrv.GetModuleTypeName(i));
+   LI.SubItems.Add(IntToHex(MTBdrv.GetCfg(i), 8));
+ end;
+end;
 
 procedure TFormConfig.PM_AboutClick(Sender: TObject);
 begin
@@ -194,45 +174,28 @@ end;
 procedure TFormConfig.PM_CloseClick(Sender: TObject);
 begin
  Self.Hide();
-end;//procedure
+end;
 
 procedure TFormConfig.lv_modulesDblClick(Sender: TObject);
- begin
-  if (lv_modules.Selected <> nil) then
-   begin
-    FormModule.OpenForm(StrToInt(lv_modules.Items.Item[lv_modules.ItemIndex].SubItems.Strings[0]));
-   end;//LV_Modules.Selected <> nil
- end;
+begin
+ if (lv_modules.Selected <> nil) then
+   FormModule.OpenForm(StrToInt(lv_modules.Items.Item[lv_modules.ItemIndex].SubItems.Strings[0]));
+end;
 
 procedure TFormConfig.cb_speedChange(Sender: TObject);
 begin
  MTBdrv.MtbSpeed := TMtbSpeed(Self.cb_speed.ItemIndex+2);
 end;
 
-procedure TFormConfig.CHB_LoggingClick(Sender: TObject);
-begin
- MTBdrv.LogWriting := Self.CHB_Logging.Checked;
-end;
-
-procedure TFormConfig.CHB_LogInClick(Sender: TObject);
-begin
- MTBdrv.LogDataInWriting  := Self.CHB_LogIn.Checked;
-end;
-
-procedure TFormConfig.CHB_LogOutClick(Sender: TObject);
-begin
- MTBdrv.LogDataOutWriting := Self.CHB_LogOut.Checked;
-end;
-
 procedure TFormConfig.cb_mtbNameChange(Sender: TObject);
 begin
-  MTBdrv.UsbSerial := cb_mtbName.text;
+ MTBdrv.UsbSerial := cb_mtbName.text;
 end;
 
 procedure TFormConfig.pm_mod_nastaveniClick(Sender: TObject);
- begin
-  FormModule.OpenForm(StrToInt(lv_modules.Items.Item[lv_modules.ItemIndex].SubItems.Strings[0]));
- end;//procedure
+begin
+ FormModule.OpenForm(StrToInt(lv_modules.Items.Item[lv_modules.ItemIndex].SubItems.Strings[0]));
+end;
 
 procedure TFormConfig.FormCreate(Sender: TObject);
 var
@@ -260,28 +223,8 @@ begin
    end;
 
  Self.Caption := Self.Caption+'        v'+_VERSION;
-
- MTBdrv.OnChange        := Self.OnChange;
- MTBdrv.OnError         := Self.OnError;
- MTBdrv.OnLog           := Self.OnLog;
- MTBdrv.OnInputChange   := Self.OnInputChanged;
- MTBdrv.OnOutputChange  := Self.OnOutputChanged;
-
- MTBdrv.BeforeOpen  := Self.BeforeOpen;
- MTBdrv.AfterOpen   := Self.AfterOpen;
- MTBdrv.BeforeClose := Self.BeforeClose;
- MTBdrv.AfterClose  := Self.AfterClose;
-
- MTBdrv.BeforeStart  := Self.BeforeStart;
- MTBdrv.AfterStart   := Self.AfterStart;
- MTBdrv.BeforeStop   := Self.BeforeStop;
- MTBdrv.AfterStop    := Self.AfterStop;
-
  Self.PC_Main.ActivePageIndex := 0;
-
- Self.CHB_Logging.Checked := MTBdrv.LogWriting;
- Self.CHB_LogOut.Checked  := MTBdrv.LogDataOutWriting;
- Self.CHB_LogIn.Checked   := MTBdrv.LogDataInWriting;
+ Self.CB_LogLevel.ItemIndex := Integer(MTBdrv.LogLevel);
 end;
 
 procedure TFormConfig.LV_LogCustomDrawItem(Sender: TCustomListView;
@@ -305,104 +248,78 @@ end;
 
 procedure TFormConfig.FormCloseQuery(Sender: TObject;
   var CanClose: Boolean);
- begin
-  CanClose := false;
-  Hide;
- end;//procedure
+begin
+ CanClose := false;
+ Hide;
+end;
 
 procedure TFormConfig.RG_TimerIntervalClick(Sender: TObject);
- begin
-  MTBdrv.ScanInterval := TTimerInterval(StrToIntDef(RG_TimerInterval.Items.Strings[RG_TimerInterval.ItemIndex],50));
- end;//procedure
+begin
+ MTBdrv.ScanInterval := TTimerInterval(StrToIntDef(RG_TimerInterval.Items.Strings[RG_TimerInterval.ItemIndex],50));
+end;
 
 procedure TFormConfig.pm_modPopup(Sender: TObject);
 var cyklus:Integer;
- begin
-  if (lv_modules.Selected <> nil) then
-   begin
-    for cyklus := 0 to pm_mod.Items.Count-1 do pm_mod.Items.Items[cyklus].Enabled := true;
-   end else begin
-    for cyklus := 0 to pm_mod.Items.Count-1 do pm_mod.Items.Items[cyklus].Enabled := false;
-  end;//else LV_HV.Selected <> nil
- end;//procedure
+begin
+ if (lv_modules.Selected <> nil) then
+  begin
+   for cyklus := 0 to pm_mod.Items.Count-1 do pm_mod.Items.Items[cyklus].Enabled := true;
+  end else begin
+   for cyklus := 0 to pm_mod.Items.Count-1 do pm_mod.Items.Items[cyklus].Enabled := false;
+ end;//else LV_HV.Selected <> nil
+end;
 
 procedure TFormConfig.BeforeOpen(Sender:TObject);
 begin
- if (not Assigned(Self.L_Openned)) then Exit;
-
  Self.L_Openned.Caption := 'otevírám...';
  Self.L_Openned.Font.Color := clSilver;
- if (Assigned(LibEvents.BeforeOpen.event)) then LibEvents.BeforeOpen.event(Self, LibEvents.BeforeOpen.data);
 
  Self.cb_speed.Enabled   := false;
  Self.cb_mtbName.Enabled := false;
  Self.b_ScanBrd.Enabled  := false;
-end;//procedure
+end;
 
 procedure TFormConfig.AfterOpen(Sender:TObject);
 begin
- if (not Assigned(Self.L_Openned)) then Exit;
-
  Self.L_Openned.Caption := 'otevøeno';
  Self.L_Openned.Font.Color := clGreen;
  Self.OnScanned(Self);
- if (Assigned(LibEvents.AfterOpen.event)) then LibEvents.AfterOpen.event(Self, LibEvents.AfterOpen.data);
-end;//procedure
+end;
 
 procedure TFormConfig.BeforeClose(Sender:TObject);
 begin
- if (not Assigned(Self.L_Openned)) then Exit;
-
  Self.L_Openned.Caption := 'zavírám...';
  Self.L_Openned.Font.Color := clSilver;
- if (Assigned(LibEvents.BeforeClose.event)) then LibEvents.BeforeClose.event(Self, LibEvents.BeforeClose.data);
-end;//procedure
+end;
 
 procedure TFormConfig.AfterClose(Sender:TObject);
 begin
- if (not Assigned(Self.L_Openned)) then Exit;
-
  Self.L_Openned.Caption := 'uzavøeno';
  Self.L_Openned.Font.Color := clRed;
- if (Assigned(LibEvents.AfterClose.event)) then LibEvents.AfterClose.event(Self, LibEvents.AfterClose.data);
-
  Self.cb_speed.Enabled   := true;
  Self.cb_mtbName.Enabled := true;
- Self.b_ScanBrd.Enabled  := true;
-end;//procedure
+ Self.b_ScanBrd.Enabled  := true
+end;
 
 procedure TFormConfig.BeforeStart(Sender:TObject);
 begin
- if (not Assigned(Self)) then Exit;
-
  Self.L_Started.Caption := 'spouštím...';
- Self.L_Started.Font.Color   := clSilver;
- if (Assigned(LibEvents.BeforeStart.event)) then LibEvents.BeforeStart.event(Self, LibEvents.BeforeStart.data);
-
- Self.b_ScanBrd.Enabled  := false;
-end;//procedure
+ Self.L_Started.Font.Color := clSilver;
+ Self.b_ScanBrd.Enabled := false;
+end;
 
 procedure TFormConfig.AfterStart(Sender:TObject);
 begin
- if (not Assigned(Self)) then Exit;
-
  Self.L_Started.Caption := 'spuštìna';
- Self.L_Started.Font.Color   := clGreen;
- if (Assigned(LibEvents.AfterStart.event)) then LibEvents.AfterStart.event(Self, LibEvents.AfterStart.data);
- FormModule.RefreshStates();
-end;//procedure
+ Self.L_Started.Font.Color := clGreen;
+end;
 
 procedure TFormConfig.BeforeStop(Sender:TObject);
 begin
- if (not Assigned(Self)) then Exit;
-
  Self.L_Started.Caption := 'zastavuji...';
- Self.L_Started.Font.Color   := clSilver;
- if (Assigned(LibEvents.BeforeStop.event)) then LibEvents.BeforeStop.event(Self, LibEvents.BeforeStop.data);
-
+ Self.L_Started.Font.Color := clSilver;
  Self.b_ScanBrd.Enabled  := true;
  Self.cb_mtbName.Enabled := true;
- FormModule.RefreshStates();
 end;
 
 // vyresetovat konfiguraci vsech modulu, ktere nebyly nalezeny
@@ -428,30 +345,21 @@ end;//procedure
 
 procedure TFormConfig.AfterStop(Sender:TObject);
 begin
- if (not Assigned(Self)) then Exit;
-
  Self.L_Started.Caption      := 'zastavena';
  Self.L_Started.Font.Color   := clRed;
  if (Assigned(LibEvents.AfterStop.event)) then LibEvents.AfterStop.event(Self, LibEvents.AfterStop.data);
-end;//procedure
-
-procedure TFormConfig.OnChange(Sender:TObject);
-begin
- FormModule.OnChange(Sender);
-end;//procedure
+end;
 
 procedure TFormConfig.OnLog(Sender: TObject; logValue: string);
 var LI:TListItem;
 begin
- if (not Assigned(Self.LV_Log)) then Exit;
-
  if (Self.LV_Log.Items.Count > 1000) then
   Self.LV_Log.Clear();
 
  LI := Self.LV_Log.Items.Insert(0);
  LI.Caption := IntToStr(Self.lv_Log.Items.Count);
  LI.SubItems.Add(logValue);
-end;//procedure
+end;
 
 procedure TFormConfig.OnError(Sender: TObject; errValue: word; errAddr: byte);
 var str:string;
@@ -460,8 +368,6 @@ begin
  str := str + ' ' + MTBdrv.GetErrString(errValue)+' (Val:'+IntToStr(errValue)+'; Addr:'+IntToStr(errAddr)+')';
 
  Self.OnLog(Sender,'ERR: '+str);
-
-// if (Assigned(LibEvents.OnError.event)) then LibEvents.OnError.event(Self, LibEvents.OnError.data, errValue, errAddr, MTBdrv.GetErrString(errValue));
 
  if (errAddr = 255) then
   begin
@@ -490,16 +396,6 @@ begin
    end;//case
   end;//if errAddr = 255
 end;//procedure
-
-procedure TFormConfig.OnInputChanged(Sender: TObject; module: byte);
-begin
- if (Assigned(LibEvents.OnInputChanged.event)) then LibEvents.OnInputChanged.event(Self, LibEvents.OnInputChanged.data, module);
-end;
-
-procedure TFormConfig.OnOutputChanged(Sender: TObject; module: byte);
-begin
- if (Assigned(LibEvents.OnOutputChanged.event)) then LibEvents.OnOutputChanged.event(Self, LibEvents.OnOutputChanged.data, module);
-end;
 
 initialization
 

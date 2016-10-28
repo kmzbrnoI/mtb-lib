@@ -72,7 +72,8 @@ uses
   About in 'About.pas' {F_About},
   MTBusb in 'MTBusb.pas',
   LibraryEvents in 'LibraryEvents.pas',
-  Errors in 'Errors.pas';
+  Errors in 'Errors.pas',
+  LibCML in 'LibCML.pas';
 
 {$R *.res}
 
@@ -82,35 +83,44 @@ uses
 
 function LoadConfig(filename:PChar):Integer; stdcall;
 begin
-
+ try
+  MTBdrv.LoadConfig(filename);
+  Result := 0;
+ except
+  Result := MTB_GENERAL_EXCEPTION;
+ end;
 end;
 
 function SaveConfig(filename:PChar):Integer; stdcall;
 begin
-
+ try
+  MTBdrv.SaveConfig(filename);
+  Result := 0;
+ except
+  Result := MTB_GENERAL_EXCEPTION;
+ end;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Logging:
 
-procedure SetLogLevelFile(loglevel:Cardinal); stdcall;
+procedure SetLogLevel(loglevel:Cardinal); stdcall;
 begin
+ try
+  MTBdrv.LogLevel := TLogLevel(loglevel);
+  FormConfig.CB_LogLevel.ItemIndex := Integer(MTBdrv.LogLevel);
+ except
 
+ end;
 end;
 
-procedure SetLogLevelEvent(loglevel:Cardinal); stdcall;
+function GetLogLevel():Cardinal; stdcall;
 begin
-
-end;
-
-function GetLogLevelFile():Cardinal; stdcall;
-begin
-
-end;
-
-function GetLogLevelEvent():Cardinal; stdcall;
-begin
-
+ try
+  Result := Cardinal(MTBdrv.LogLevel);
+ except
+  Result := MTB_GENERAL_EXCEPTION;
+ end;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,6 +246,8 @@ begin
    if (MTBdrv.IsModuleFailure(module)) then Exit(MTB_MODULE_FAILED);
    if (not InRange(port, Low(TIOchann), High(TIOchann))) then Exit(MTB_PORT_INVALID_NUMBER);
 
+   Result := 0;
+
    case (MTBdrv.GetModuleType(Module)) of
      TModulType.idMTB_POT_ID  : Result := MTBdrv.GetPotChannel(Module, Port);
      TModulType.idMTB_REGP_ID : Result := MTBdrv.GetRegChannel(Module, Port);
@@ -306,8 +318,12 @@ begin
             end;//case 1..127
      end;
 
+    Result := 0;
   except
-    Result := MTB_GENERAL_EXCEPTION;
+    on E:EInvalidScomCode do
+      Result := MTB_INVALID_SCOM_CODE;
+    on E:Exception do
+      Result := MTB_GENERAL_EXCEPTION;
   end;
 end;//function
 
@@ -319,7 +335,7 @@ begin
  try
    Result := MTBdrv.GetDeviceCount;
  except
-
+   Result := MTB_GENERAL_EXCEPTION;
  end;
 end;
 
@@ -429,111 +445,89 @@ begin
  end;
 end;
 
-{////////////////////////////////////////////////////////////////////////////////
-// Sets module name
-
-function SetModuleName(Module:Integer;Name:string):Integer; stdcall;
-begin
-  MTBdrv.GetModuleCfg(Module);
-  MTBdrv.WrCfgData.CFGdata[0] := MTBdrv.RdCfgdata.CFGdata[0];
-  MTBdrv.WrCfgData.CFGdata[1] := MTBdrv.RdCfgdata.CFGdata[1];
-  MTBdrv.WrCfgData.CFGdata[2] := MTBdrv.RdCfgdata.CFGdata[2];
-  MTBdrv.WrCfgData.CFGpopis := Name;
-  MTBdrv.SetModuleCfg(Module);
-  Result := 0;
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-// Sets MTB speed (must be called before open)
-
-function SetMtbSpeed(Speed:Integer):Integer; stdcall;
-begin
-  if (Speed <= 2) then
-   begin
-    MTBdrv.MtbSpeed := TMtbSpeed(Speed+2);
-    FormConfig.cb_speed.ItemIndex := Speed;
-    Result := 0;
-   end else
-    Result := 50;
-end;}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Event binders:
 
-
 procedure BindBeforeOpen(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-
+ LibEvents.BeforeOpen.data  := data;
+ LibEvents.BeforeOpen.event := event;
 end;
 
 procedure BindAfterOpen(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-
+ LibEvents.AfterOpen.data  := data;
+ LibEvents.AfterOpen.event := event;
 end;
 
 procedure BindBeforeClose(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-
+ LibEvents.BeforeClose.data  := data;
+ LibEvents.BeforeClose.event := event;
 end;
 
 procedure BindAfterClose(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-
+ LibEvents.AfterClose.data  := data;
+ LibEvents.AfterClose.event := event;
 end;
 
 procedure BindBeforeStart(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-
+ LibEvents.BeforeStart.data  := data;
+ LibEvents.BeforeStart.event := event;
 end;
 
 procedure BindAfterStart(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-
+ LibEvents.AfterStart.data  := data;
+ LibEvents.AfterStart.event := event;
 end;
 
 procedure BindBeforeStop(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-
+ LibEvents.BeforeStop.data  := data;
+ LibEvents.BeforeStop.event := event;
 end;
 
 procedure BindAfterStop(event:TStdNotifyEvent; data:Pointer); stdcall;
 begin
-
+ LibEvents.AfterStop.data  := data;
+ LibEvents.AfterStop.event := event;
 end;
 
 procedure BindOnError(event:TStdErrorEvent; data:Pointer); stdcall;
 begin
-
+ LibEvents.OnError.data  := data;
+ LibEvents.OnError.event := event;
 end;
 
 procedure BindOnLog(event:TStdLogEvent; data:Pointer); stdcall;
 begin
-
+ LibEvents.OnLog.data  := data;
+ LibEvents.OnLog.event := event;
+ FormConfig.CB_LogLevel.Visible := Assigned(event);
+ FormConfig.L_LogLevel.Visible  := Assigned(event);
 end;
 
 procedure BindOnInputChanged(event:TStdModuleChangeEvent; data:Pointer); stdcall;
 begin
-
+ LibEvents.OnInputChanged.data  := data;
+ LibEvents.OnInputChanged.event := event;
 end;
 
 procedure BindOnOutputChanged(event:TStdModuleChangeEvent; data:Pointer); stdcall;
 begin
-
+ LibEvents.OnOutputChanged.data  := data;
+ LibEvents.OnOutputChanged.event := event;
 end;
 
-
-{procedure SetBeforeOpen(event:TStdNotifyEvent; data:Pointer); stdcall;
-begin
-  LibEvents.BeforeOpen.data  := data;
-  LibEvents.BeforeOpen.event := event;
-end;//function }
-
 ////////////////////////////////////////////////////////////////////////////////
-// Exported functions (dll exported):
+// Dll exported functions:
 
 exports
   LoadConfig, SaveConfig,
-  SetLogLevelFile, SetLogLevelEvent, GetLogLevelFile, GetLogLevelEvent,
+  SetLogLevel, GetLogLevel,
   ShowConfigDialog, HideConfigDialog,
   Open, OpenDevice, Close, Openned, Start, Stop, Started,
   GetInput, GetOutput, SetOutput,
@@ -546,8 +540,6 @@ exports
 
 
 begin
-  MTBDrv := TMTBusb.Create(nil, 'mtb');
-
   Application.CreateForm(TFormConfig, FormConfig);
   Application.CreateForm(TFormModule, FormModule);
   Application.CreateForm(TF_About, F_About);
