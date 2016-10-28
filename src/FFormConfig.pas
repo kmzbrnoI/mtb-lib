@@ -372,9 +372,7 @@ begin
 end;
 
 procedure TFormConfig.OnError(Sender: TObject; errValue: word; errAddr: byte);
-var str:string;
 begin
-
  if (errAddr = 255) then
   begin
    //errors on main board (MTB-USB)

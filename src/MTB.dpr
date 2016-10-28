@@ -159,9 +159,11 @@ begin
       Result := MTB_ALREADY_STARTED;
     on E:ECannotOpenPort do
       Result := MTB_CANNOT_OPEN_PORT;
+    on E:EFtGeneral do
+      Result := MTB_FT_EXCEPTION;
     on E:Exception do
       Result := MTB_GENERAL_EXCEPTION;
-  end;
+   end;
 end;
 
 function OpenDevice(device:PChar; persist:boolean):Integer; stdcall;
@@ -176,6 +178,8 @@ begin
       Result := MTB_ALREADY_STARTED;
     on E:ECannotOpenPort do
       Result := MTB_CANNOT_OPEN_PORT;
+    on E:EFtGeneral do
+      Result := MTB_FT_EXCEPTION;
     on E:Exception do
       Result := MTB_GENERAL_EXCEPTION;
   end;
@@ -187,7 +191,10 @@ begin
     MTBdrv.Close();
     Result := 0;
   except
-    Result := MTB_GENERAL_EXCEPTION;
+    on E:EFtGeneral do
+      Result := MTB_FT_EXCEPTION;
+    on E:Exception do
+      Result := MTB_GENERAL_EXCEPTION;
   end;
 end;
 
@@ -211,7 +218,10 @@ begin
     MTBdrv.Start();
     Result := 0;
   except
-    Result := MTB_GENERAL_EXCEPTION;
+    on E:EFtGeneral do
+      Result := MTB_FT_EXCEPTION;
+    on E:Exception do
+      Result := MTB_GENERAL_EXCEPTION;
   end;
 end;
 
@@ -222,7 +232,10 @@ begin
     MTBdrv.Stop();
     Result := 0;
   except
-    Result := MTB_GENERAL_EXCEPTION;
+    on E:EFtGeneral do
+      Result := MTB_FT_EXCEPTION;
+    on E:Exception do
+      Result := MTB_GENERAL_EXCEPTION;
   end;
 end;
 
@@ -261,7 +274,10 @@ begin
    end;
 
  except
-   Result := MTB_GENERAL_EXCEPTION;
+    on E:EFtGeneral do
+      Result := MTB_FT_EXCEPTION;
+    on E:Exception do
+      Result := MTB_GENERAL_EXCEPTION;
  end;
 end;
 
@@ -287,7 +303,10 @@ begin
     end;
 
   except
-    Result := MTB_GENERAL_EXCEPTION;
+    on E:EFtGeneral do
+      Result := MTB_FT_EXCEPTION;
+    on E:Exception do
+      Result := MTB_GENERAL_EXCEPTION;
   end;
 end;
 
@@ -334,7 +353,10 @@ begin
  try
    Result := MTBdrv.GetDeviceCount;
  except
-   Result := MTB_GENERAL_EXCEPTION;
+    on E:EFtGeneral do
+      Result := MTB_FT_EXCEPTION;
+    on E:Exception do
+      Result := MTB_GENERAL_EXCEPTION;
  end;
 end;
 
@@ -376,7 +398,10 @@ begin
  try
    Result := MTBdrv.ModuleCount;
  except
-   Result := MTB_GENERAL_EXCEPTION;
+    on E:EFtGeneral do
+      Result := MTB_FT_EXCEPTION;
+    on E:Exception do
+      Result := MTB_GENERAL_EXCEPTION;
  end;
 end;
 
@@ -386,7 +411,10 @@ begin
    if ((not InRange(module, Low(TAddr), High(TAddr))) or (not MTBdrv.IsModule(module))) then Exit(MTB_MODULE_INVALID_ADDR);
    Result := Integer(MTBdrv.GetModuleInfo(module).typ);
  except
-   Result := MTB_GENERAL_EXCEPTION;
+    on E:EFtGeneral do
+      Result := MTB_FT_EXCEPTION;
+    on E:Exception do
+      Result := MTB_GENERAL_EXCEPTION;
  end;
 end;
 
@@ -397,7 +425,10 @@ begin
    StrPLCopy(name, MTBdrv.GetModuleInfo(module).name, nameLen);
    Result := 0;
  except
-   Result := MTB_GENERAL_EXCEPTION;
+    on E:EFtGeneral do
+      Result := MTB_FT_EXCEPTION;
+    on E:Exception do
+      Result := MTB_GENERAL_EXCEPTION;
  end;
 end;
 
@@ -408,7 +439,10 @@ begin
    StrPLCopy(fw, MTBdrv.GetModuleInfo(module).firmware, fwLen);
    Result := 0;
  except
-   Result := MTB_GENERAL_EXCEPTION;
+    on E:EFtGeneral do
+      Result := MTB_FT_EXCEPTION;
+    on E:Exception do
+      Result := MTB_GENERAL_EXCEPTION;
  end;
 end;
 

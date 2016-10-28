@@ -38,12 +38,18 @@
 unit MTBD2XXUnit;
 
 interface
-Uses Windows,Forms,Dialogs;
 
-Type FT_Result = Integer;
+Uses Windows, Forms, Dialogs, SysUtils;
 
-// Error callback
-TCallBackError = procedure (Error:Integer; Description: string) of object;
+Type
+  FT_Result = Integer;
+  EFtGeneral = class(Exception);
+  EFtInvalidHandle = class(EFtGeneral);
+  EFtDeviceNotFound = class(EFtGeneral);
+  EFtDeviceNotOpened = class(EFtGeneral);
+  EFtIoError = class(EFtGeneral);
+  EFtInsufficientResources = class(EFtGeneral);
+  EFtInvalidParameter = class(EFtGeneral);
 
 // Exported Functions
 Function GetFTDeviceCount : FT_Result;
@@ -101,8 +107,6 @@ Var
 //  Used to return the number of bytes pending
 //  in the Rx Buffer Queue
     FT_Q_Bytes : DWord;
-//  Used to Enable / Disable the Error Report Dialog
-    FT_Enable_Error_Report : Boolean = True;
 
 Const
 // FT_Result Values
@@ -182,12 +186,7 @@ var
    FT_Device_String_Buffer : Array [1..50] of byte;
    FT_Device_String : String;
 
-   ErrorCallBack:TCallBackError;
-
-
 implementation
-
-uses SysUtils;
 
 function FT_Open(PVDevice:Integer; ftHandle:Pointer ) : FT_Result ; stdcall ; External FT_DLL_Name name 'FT_Open';
 function FT_Close(ftHandle:Dword) : FT_Result ; stdcall ; External FT_DLL_Name name 'FT_Close';
@@ -210,20 +209,18 @@ function FT_GetNumDevices(pvArg1:Pointer;pvArg2:Pointer;dwFlags:Dword) : FT_Resu
 function FT_ListDevices(pvArg1:Dword;pvArg2:Pointer;dwFlags:Dword) : FT_Result ; stdcall ; External FT_DLL_Name name 'FT_ListDevices';
 function FT_OpenEx(pvArg1:Pointer;dwFlags:Dword;ftHandle:Pointer) : FT_Result ; stdcall ; External FT_DLL_Name name 'FT_OpenEx';
 
-Procedure FT_Error_Report(ErrStr: String; PortStatus : Integer);
-Var Str : String;
+Function FT_Error_To_Exception(E:FT_Result):EFtGeneral;
 Begin
-  if (not Assigned(ErrorCallBack)) then Exit();
-  If PortStatus = FT_OK then Exit;
-  Case (PortStatus) of
-    FT_INVALID_HANDLE : Str := ErrStr+' - Neplatna hodnota...';
-    FT_DEVICE_NOT_FOUND : Str := ErrStr+' - Zarizeni nenalezeno....';
-    FT_DEVICE_NOT_OPENED : Str := ErrStr+' - Zarizeni neni pripojeno...';
-    FT_IO_ERROR : Str := ErrStr+' - Hlavni IO chyba...';
-    FT_INSUFFICIENT_RESOURCES : Str := ErrStr+' - Nedostatecne zdroje...';
-    FT_INVALID_PARAMETER : Str := ErrStr+' - Neplatny parametr...';
+  Case (E) of
+    FT_INVALID_HANDLE : Result := EFtInvalidHandle.Create('Invalid handle!');
+    FT_DEVICE_NOT_FOUND : Result := EFtDeviceNotFound.Create('Device not found!');
+    FT_DEVICE_NOT_OPENED : Result := EFtDeviceNotOpened.Create('Device not opened!');
+    FT_IO_ERROR : Result := EFtIoError.Create('General IO error!');
+    FT_INSUFFICIENT_RESOURCES : Result := EFtInsufficientResources.Create('Insufficient resources!');
+    FT_INVALID_PARAMETER : Result := EFtInvalidParameter.Create('Invalid parameter!');
+  else
+    Result := EFtGeneral.Create('EFtGeneral!');
   End;
-  ErrorCallBack(PortStatus, str);
 End;
 
 Function GetDeviceString : String;
@@ -251,27 +248,27 @@ End;
 Function GetFTDeviceCount : FT_Result;
 Begin
   Result := FT_GetNumDevices(@FT_Device_Count,Nil,FT_LIST_NUMBER_ONLY);
-  If Result <> FT_OK then FT_Error_Report('GetFTDeviceCount',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function GetFTDeviceSerialNo( DeviceIndex : DWord ) : FT_Result;
 Begin
   Result := FT_ListDevices(DeviceIndex,@FT_Device_String_Buffer,(FT_OPEN_BY_SERIAL_NUMBER or FT_LIST_BY_INDEX));
-  If Result = FT_OK then FT_Device_String := GetDeviceString;
-  If Result <> FT_OK then FT_Error_Report('GetFTDeviceSerialNo',Result);
+  If Result = FT_OK then FT_Device_String := GetDeviceString
+  else raise FT_Error_To_Exception(Result);
 End;
 
 Function GetFTDeviceDescription( DeviceIndex : DWord ) : FT_Result;
 Begin
   Result := FT_ListDevices(DeviceIndex,@FT_Device_String_Buffer,(FT_OPEN_BY_DESCRIPTION or FT_LIST_BY_INDEX));
   If Result = FT_OK then FT_Device_String := GetDeviceString;
-  If Result <> FT_OK then FT_Error_Report('GetFTDeviceDescription',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Open_USB_Device : FT_Result;
 Begin
   Result := FT_Open(PV_Device,@FT_Handle);
-  If Result <> FT_OK then FT_Error_Report('FT_Open',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 
@@ -279,86 +276,86 @@ Function Open_USB_Device_By_Serial_Number( Serial_Number : string ) : FT_Result;
 Begin
   SetDeviceString(Serial_Number);
   Result := FT_OpenEx(@FT_Device_String_Buffer,FT_OPEN_BY_SERIAL_NUMBER,@FT_Handle);
-  If Result <> FT_OK then FT_Error_Report('Open_USB_Device_By_Serial_Number',Result);//Open_USB_Device_By_Serial_Number
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Open_USB_Device_By_Device_Description( Device_Description : string ) : FT_Result;
 Begin
   SetDeviceString(Device_Description);
   Result := FT_OpenEx(@FT_Device_String_Buffer,FT_OPEN_BY_DESCRIPTION,@FT_Handle);
-  If Result <> FT_OK then FT_Error_Report('Open_USB_Device_By_Device_Description',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Close_USB_Device : FT_Result;
 Begin
   Result :=  FT_Close(FT_Handle);
-  If Result <> FT_OK then FT_Error_Report('FT_Close',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Reset_USB_Device : FT_Result;
 Begin
   Result :=  FT_ResetDevice(FT_Handle);
-  If Result <> FT_OK then FT_Error_Report('FT_ResetDevice',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Purge_USB_Device_Out : FT_Result;
 Begin
   Result :=  FT_Purge(FT_Handle,FT_PURGE_TX);
-  If Result <> FT_OK then FT_Error_Report('FT_Purge TX',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Purge_USB_Device_In : FT_Result;
 Begin
   Result :=  FT_Purge(FT_Handle,FT_PURGE_RX);
-  If Result <> FT_OK then FT_Error_Report('FT_Purge RX',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Set_USB_Device_RTS : FT_Result;
 Begin
   Result :=  FT_SetRTS(FT_Handle);
-  If Result <> FT_OK then FT_Error_Report('FT_SetRTS',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Clr_USB_Device_RTS : FT_Result;
 Begin
   Result :=  FT_ClrRTS(FT_Handle);
-  If Result <> FT_OK then FT_Error_Report('FT_ClrRTS',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Set_USB_Device_DTR : FT_Result;
 Begin
   Result :=  FT_SetDTR(FT_Handle);
-  If Result <> FT_OK then FT_Error_Report('FT_SetDTR',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Clr_USB_Device_DTR : FT_Result;
 Begin
   Result :=  FT_ClrDTR(FT_Handle);
-  If Result <> FT_OK then FT_Error_Report('FT_ClrDTR',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Set_USB_Device_BaudRate : FT_Result;
 Begin
   Result :=  FT_SetBaudRate(FT_Handle,FT_Current_Baud);
-  If Result <> FT_OK then FT_Error_Report('FT_SetBaudRate',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Set_USB_Device_DataCharacteristics : FT_Result;
 Begin
   Result :=  FT_SetDataCharacteristics(FT_Handle,FT_Current_DataBits,FT_Current_StopBits,FT_Current_Parity);
-  If Result <> FT_OK then FT_Error_Report('FT_SetDataCharacteristics',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Set_USB_Device_FlowControl : FT_Result;
 Begin
   Result :=  FT_SetFlowControl(FT_Handle,FT_Current_FlowControl,FT_XON_Value,FT_XOFF_Value);
-  If Result <> FT_OK then FT_Error_Report('FT_SetFlowControl',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Get_USB_Device_ModemStatus : FT_Result;
 Begin
   Result :=  FT_GetModemStatus(FT_Handle,@FT_Modem_Status);
-  If Result <> FT_OK then FT_Error_Report('FT_GetModemStatus',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Set_USB_Device_Chars : FT_Result;
@@ -367,19 +364,19 @@ Begin
   If FT_Event_On then Events_On := 1 else Events_On := 0;
   If FT_Error_On then Errors_On := 1 else Errors_On := 0;
   Result :=  FT_SetChars(FT_Handle,FT_EVENT_Value,Events_On,FT_ERROR_Value,Errors_On);
-  If Result <> FT_OK then FT_Error_Report('FT_SetChars',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Set_USB_Device_TimeOuts(ReadTimeOut,WriteTimeOut:DWord) : FT_Result;
 Begin
   Result :=  FT_SetTimeouts(FT_Handle,ReadTimeout,WriteTimeout);
-  If Result <> FT_OK then FT_Error_Report('FT_SetTimeouts',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 Function Get_USB_Device_QueueStatus : FT_Result;
 Begin
   Result :=  FT_GetQueueStatus(FT_Handle,@FT_Q_Bytes);
-  If Result <> FT_OK then FT_Error_Report('FT_GetQueueStatus',Result);
+  If Result <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 function Write_USB_Device_Buffer( Write_Count : Integer ) : Integer;
@@ -389,8 +386,8 @@ function Write_USB_Device_Buffer( Write_Count : Integer ) : Integer;
 Var Write_Result : Integer;
 Begin
   FT_IO_Status := FT_Write(FT_Handle,@FT_Out_Buffer,Write_Count,@Write_Result);
-  If FT_IO_Status <> FT_OK then FT_Error_Report('FT_Write',FT_IO_Status);
   Result := Write_Result;
+  If FT_IO_Status <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 function Read_USB_Device_Buffer( Read_Count : Integer ) : Integer;
@@ -402,8 +399,8 @@ function Read_USB_Device_Buffer( Read_Count : Integer ) : Integer;
 Var Read_Result : Integer;
 Begin
   FT_IO_Status := FT_Read(FT_Handle,@FT_In_Buffer,Read_Count,@Read_Result);
-  If FT_IO_Status <> FT_OK then FT_Error_Report('FT_Read',FT_IO_Status);
   Result := Read_Result;
+  If FT_IO_Status <> FT_OK then raise FT_Error_To_Exception(Result);
 End;
 
 

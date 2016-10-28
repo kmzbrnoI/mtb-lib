@@ -41,8 +41,6 @@ type
     private
       procedure MTBOnScanned(Sender:TObject);
       procedure MTBOnChange(Sender:TObject);
-      procedure MTBOnError(Sender: TObject; errValue: word; errAddr: byte);
-      procedure MTBOnLog(Sender: TObject; ll:TLogLevel; logValue: string);
       procedure MTBOnInputChanged(Sender: TObject; module: byte);
       procedure MTBOnOutputChanged(Sender: TObject; module: byte);
 
@@ -60,6 +58,9 @@ type
       constructor Create();
       destructor Destroy(); override;
 
+      procedure OnError(Sender: TObject; errValue: word; errAddr: byte);
+      procedure OnLog(Sender: TObject; ll:TLogLevel; logValue: string);
+
   end;
 
 var
@@ -76,8 +77,8 @@ constructor TCML.Create();
 begin
  inherited;
 
- MTBdrv.OnError         := Self.MTBOnError;
- MTBdrv.OnLog           := Self.MTBOnLog;
+ MTBdrv.OnError         := Self.OnError;
+ MTBdrv.OnLog           := Self.OnLog;
  MTBdrv.OnChange        := self.MTBOnChange;
  MTBdrv.OnScan          := Self.MTBOnScanned;
  MTBdrv.OnInputChange   := Self.MTBOnInputChanged;
@@ -163,13 +164,13 @@ begin
  FormModule.OnChange(Sender);
 end;
 
-procedure TCML.MTBOnLog(Sender: TObject; ll:TLogLevel; logValue: string);
+procedure TCML.OnLog(Sender: TObject; ll:TLogLevel; logValue: string);
 begin
  FormConfig.OnLog(Sender, ll, logValue);
  if (Assigned(LibEvents.OnLog.event)) then LibEvents.OnLog.event(Self, LibEvents.OnLog.data, Integer(ll), PChar(logValue));
 end;
 
-procedure TCML.MTBOnError(Sender: TObject; errValue: word; errAddr: byte);
+procedure TCML.OnError(Sender: TObject; errValue: word; errAddr: byte);
 begin
  FormConfig.OnError(Sender, errValue, errAddr);
  if (Assigned(LibEvents.OnError.event)) then
