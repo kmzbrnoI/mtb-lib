@@ -5,7 +5,6 @@
 //  (c) Petr Travnik (petr.travnik@kmz-brno.cz),
 //      Jan Horacek (jan.horacek@kmz-brno.cz),
 //      Michal Petrilak (engineercz@gmail.com)
-// 30.05.2015
 ////////////////////////////////////////////////////////////////////////////////
 
 {
@@ -214,7 +213,7 @@ function FT_OpenEx(pvArg1:Pointer;dwFlags:Dword;ftHandle:Pointer) : FT_Result ; 
 Procedure FT_Error_Report(ErrStr: String; PortStatus : Integer);
 Var Str : String;
 Begin
-  If Not FT_Enable_Error_Report then Exit;
+  if (not Assigned(ErrorCallBack)) then Exit();
   If PortStatus = FT_OK then Exit;
   Case (PortStatus) of
     FT_INVALID_HANDLE : Str := ErrStr+' - Neplatna hodnota...';
@@ -223,14 +222,8 @@ Begin
     FT_IO_ERROR : Str := ErrStr+' - Hlavni IO chyba...';
     FT_INSUFFICIENT_RESOURCES : Str := ErrStr+' - Nedostatecne zdroje...';
     FT_INVALID_PARAMETER : Str := ErrStr+' - Neplatny parametr...';
-    End;
-
- if (not Assigned(ErrorCallBack)) then
-  begin
-   MessageDlg(Str, mtError, [mbOk], 0);
-  end else begin
-   ErrorCallBack(PortStatus, str);
-  end;
+  End;
+  ErrorCallBack(PortStatus, str);
 End;
 
 Function GetDeviceString : String;
