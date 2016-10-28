@@ -214,7 +214,7 @@ function FT_OpenEx(pvArg1:Pointer;dwFlags:Dword;ftHandle:Pointer) : FT_Result ; 
 Procedure FT_Error_Report(ErrStr: String; PortStatus : Integer);
 Var Str : String;
 Begin
-  //If Not FT_Enable_Error_Report then Exit;
+  If Not FT_Enable_Error_Report then Exit;
   If PortStatus = FT_OK then Exit;
   Case (PortStatus) of
     FT_INVALID_HANDLE : Str := ErrStr+' - Neplatna hodnota...';
@@ -394,20 +394,7 @@ function Write_USB_Device_Buffer( Write_Count : Integer ) : Integer;
 // Function returns the number of bytes actually sent
 // In this example, Write_Count should be 32k bytes max
 Var Write_Result : Integer;
-// f: Text;
-// s: string;
-// i: byte;
 Begin
-(*
-  AssignFile(f, 'D:\MTB_log.txt');
-  Append(f);
-  s := '';
-  for i := 0 to Write_Count-1 do begin
-    s := s + IntToHex(FT_Out_Buffer[i], 2)+ ' ';
-  end;
-  Writeln(f, s);
-  CloseFile(f);
-  *)
   FT_IO_Status := FT_Write(FT_Handle,@FT_Out_Buffer,Write_Count,@Write_Result);
   If FT_IO_Status <> FT_OK then FT_Error_Report('FT_Write',FT_IO_Status);
   Result := Write_Result;
