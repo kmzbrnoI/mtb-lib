@@ -5,7 +5,6 @@
 //  (c) Petr Travnik (petr.travnik@kmz-brno.cz),
 //      Jan Horacek (jan.horacek@kmz-brno.cz),
 //      Michal Petrilak (engineercz@gmail.com)
-// 09.08.2015
 ////////////////////////////////////////////////////////////////////////////////
 
 {
@@ -39,7 +38,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, Menus, StrUtils,
-  FFormModule, ExtCtrls;
+  FFormModule, ExtCtrls, MTBusb;
 
 type
 
@@ -97,7 +96,7 @@ type
     procedure BeforeStop(Sender:TObject);
     procedure AfterStop(Sender:TObject);
 
-    procedure OnLog(Sender: TObject; logValue: string);
+    procedure OnLog(Sender: TObject; logLevel:TLogLevel; logValue: string);
     procedure PM_AboutClick(Sender: TObject);
     procedure PM_CloseClick(Sender: TObject);
     procedure LV_LogCustomDrawItem(Sender: TCustomListView; Item: TListItem;
@@ -116,7 +115,7 @@ var
 implementation
 
 {$R *.dfm}
-uses About, MTBusb, LibraryEvents, LibCML;
+uses About, LibraryEvents, LibCML;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -350,24 +349,31 @@ begin
  if (Assigned(LibEvents.AfterStop.event)) then LibEvents.AfterStop.event(Self, LibEvents.AfterStop.data);
 end;
 
-procedure TFormConfig.OnLog(Sender: TObject; logValue: string);
+procedure TFormConfig.OnLog(Sender: TObject; logLevel:TLogLevel; logValue: string);
 var LI:TListItem;
+    timeStr:string;
 begin
  if (Self.LV_Log.Items.Count > 1000) then
   Self.LV_Log.Clear();
 
+ DateTimeToString(timeStr, 'hh:mm:ss.zzz', time);
  LI := Self.LV_Log.Items.Insert(0);
- LI.Caption := IntToStr(Self.lv_Log.Items.Count);
+ LI.Caption := timeStr;
+ case (logLevel) of
+  llError  : LI.SubItems.Add('Error');
+  llChange : LI.SubItems.Add('Zmìna');
+  llCmd    : LI.SubItems.Add('Pøíkaz');
+  llRawCmd : LI.SubItems.Add('RAW');
+  llDebug  : LI.SubItems.Add('Debug');
+ else
+  LI.SubItems.Add('');
+ end;
  LI.SubItems.Add(logValue);
 end;
 
 procedure TFormConfig.OnError(Sender: TObject; errValue: word; errAddr: byte);
 var str:string;
 begin
- DateTimeToString(str, 'hh:mm:ss.zzz', Time);
- str := str + ' ' + MTBdrv.GetErrString(errValue)+' (Val:'+IntToStr(errValue)+'; Addr:'+IntToStr(errAddr)+')';
-
- Self.OnLog(Sender,'ERR: '+str);
 
  if (errAddr = 255) then
   begin

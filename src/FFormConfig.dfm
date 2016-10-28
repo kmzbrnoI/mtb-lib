@@ -28,7 +28,7 @@ object FormConfig: TFormConfig
     Margins.Top = 2
     Margins.Right = 2
     Margins.Bottom = 2
-    ActivePage = TS_Device
+    ActivePage = TS_Log
     Align = alClient
     TabOrder = 0
     object TS_Device: TTabSheet
@@ -58,7 +58,7 @@ object FormConfig: TFormConfig
       end
       object Label4: TLabel
         Left = 155
-        Top = 77
+        Top = 85
         Width = 24
         Height = 13
         Margins.Left = 2
@@ -69,7 +69,7 @@ object FormConfig: TFormConfig
       end
       object L_LogLevel: TLabel
         Left = 13
-        Top = 105
+        Top = 217
         Width = 43
         Height = 13
         Caption = 'Loglevel:'
@@ -111,23 +111,23 @@ object FormConfig: TFormConfig
         OnClick = b_ScanBrdClick
       end
       object RG_TimerInterval: TRadioGroup
-        Left = 223
-        Top = 11
-        Width = 82
-        Height = 83
+        Left = 13
+        Top = 105
+        Width = 137
+        Height = 107
         Align = alCustom
-        Caption = ' Timer interval '
+        Caption = ' Scan timer interval '
         Items.Strings = (
-          '50'
-          '100'
-          '200'
-          '250')
+          '50 ms'
+          '100 ms'
+          '200 ms'
+          '250 ms')
         TabOrder = 3
         OnClick = RG_TimerIntervalClick
       end
       object CB_LogLevel: TComboBox
         Left = 13
-        Top = 123
+        Top = 235
         Width = 137
         Height = 21
         Style = csDropDownList
@@ -290,12 +290,16 @@ object FormConfig: TFormConfig
         Align = alClient
         Columns = <
           item
-            Caption = 'Index'
-            Width = 41
+            Caption = #268'as'
+            Width = 80
+          end
+          item
+            Caption = 'LogLevel'
+            Width = 60
           end
           item
             Caption = 'Zpr'#225'va'
-            Width = 406
+            Width = 350
           end>
         GridLines = True
         ReadOnly = True

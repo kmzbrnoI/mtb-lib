@@ -5,13 +5,12 @@
 //  (c) Petr Travnik (petr.travnik@kmz-brno.cz),
 //      Jan Horacek (jan.horacek@kmz-brno.cz),
 //      Michal Petrilak (engineercz@gmail.com)
-// 01.08.2015
 ////////////////////////////////////////////////////////////////////////////////
 
 {
    LICENSE:
 
-   Copyright 2015 Petr Travnik, Michal Petrilak, Jan Horacek
+   Copyright 2015-2016 Petr Travnik, Michal Petrilak, Jan Horacek
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.

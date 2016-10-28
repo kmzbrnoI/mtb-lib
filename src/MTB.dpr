@@ -5,7 +5,6 @@
 //  (c) Petr Travnik (petr.travnik@kmz-brno.cz),
 //      Jan Horacek (jan.horacek@kmz-brno.cz),
 //      Michal Petrilak (engineercz@gmail.com)
-// 09.08.2015
 ////////////////////////////////////////////////////////////////////////////////
 
 {
@@ -543,12 +542,6 @@ begin
   Application.CreateForm(TFormConfig, FormConfig);
   Application.CreateForm(TFormModule, FormModule);
   Application.CreateForm(TF_About, F_About);
-  if Assigned(MTBdrv) then
-   begin
-    if (FormConfig.cb_mtbName.ItemIndex = -1) then
-      FormConfig.OnLog(FormConfig,'ERR: nelze otevrit zarizeni, zarizeni '+MTBdrv.UsbSerial+' neexistuje')
-   end else
-    FormConfig.OnLog(FormConfig,'ERR: objekt MTBdrv nebyl vytvoren !');
 end.
 
 

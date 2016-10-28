@@ -1,9 +1,36 @@
-unit LibCML;
+////////////////////////////////////////////////////////////////////////////////
+// LibCML.pas
+//  MTB communication library
+//  Main library class.
+//  (c) Jan Horacek (jan.horacek@kmz-brno.cz)
+////////////////////////////////////////////////////////////////////////////////
 
 {
+   LICENSE:
+
+   Copyright 2016 Jan Horacek
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+  limitations under the License.
+}
+
+{
+  DESCRIPTION:
+
   TCML is main library class.
   It covers all the high-level library principles.
 }
+
+unit LibCML;
 
 interface
 
@@ -138,7 +165,7 @@ end;
 
 procedure TCML.MTBOnLog(Sender: TObject; ll:TLogLevel; logValue: string);
 begin
- FormConfig.OnLog(Sender, logValue);
+ FormConfig.OnLog(Sender, ll, logValue);
  if (Assigned(LibEvents.OnLog.event)) then LibEvents.OnLog.event(Self, LibEvents.OnLog.data, Integer(ll), PChar(logValue));
 end;
 
