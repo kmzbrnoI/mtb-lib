@@ -212,6 +212,7 @@ begin
   try
     if (MTBdrv.Scanning) then Exit(MTB_ALREADY_STARTED);
     if (MTBdrv.HWVersionInt < MIN_FW_VERSION) then Exit(MTB_FIRMWARE_TOO_LOW);
+    if (MTBdrv.OpeningScanning) then Exit(MTB_SCANNING_NOT_FINISHED);
     if (not MTBdrv.Openned) then Exit(MTB_NOT_OPENED);
     if (MTBdrv.ModuleCount = 0) then Exit(MTB_NO_MODULES);
 
