@@ -258,6 +258,7 @@ end;
 function GetInput(module, port: Cardinal): Integer; stdcall;
 begin
  try
+   if (not MTBdrv.Scanning) then Exit(MTB_NOT_STARTED);   
    if ((not InRange(module, Low(TAddr), High(TAddr))) or (not MTBdrv.IsModule(module))) then Exit(MTB_MODULE_INVALID_ADDR);
    if (MTBdrv.IsModuleFailure(module)) then Exit(MTB_MODULE_FAILED);
    if (not InRange(port, Low(TIOchann), High(TIOchann))) then Exit(MTB_PORT_INVALID_NUMBER);
@@ -289,6 +290,7 @@ function GetOutput(module, port: Cardinal): Integer; stdcall;
 var MTBport:TPortValue;
 begin
   try
+    if (not MTBdrv.Scanning) then Exit(MTB_NOT_STARTED);
     if ((not InRange(module, Low(TAddr), High(TAddr))) or (not MTBdrv.IsModule(module))) then Exit(MTB_MODULE_INVALID_ADDR);
     if (MTBdrv.IsModuleFailure(module)) then Exit(MTB_MODULE_FAILED);
     if (not InRange(port, Low(TIOchann), High(TIOchann))) then Exit(MTB_PORT_INVALID_NUMBER);
@@ -315,6 +317,7 @@ end;
 function SetOutput(module, port: Cardinal; state: Integer): Integer; stdcall;
 begin
   try
+    if (not MTBdrv.Scanning) then Exit(MTB_NOT_STARTED);
     if ((not InRange(module, Low(TAddr), High(TAddr))) or (not MTBdrv.IsModule(module))) then Exit(MTB_MODULE_INVALID_ADDR);
     if (MTBdrv.IsModuleFailure(module)) then Exit(MTB_MODULE_FAILED);
     if (not InRange(port, Low(TIOchann), High(TIOchann))) then Exit(MTB_PORT_INVALID_NUMBER);
