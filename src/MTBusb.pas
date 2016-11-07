@@ -486,11 +486,8 @@ begin
 end;
 
 procedure TMTBusb.WriteError(errValue: word; errAddr: byte);
-var str:string;
 begin
-  if (Assigned(OnError)) then OnError(Self, errValue, errAddr);
-  str := Self.GetErrString(errValue)+' (Val:'+IntToStr(errValue)+'; Addr:'+IntToStr(errAddr)+')';
-  Self.LogWrite(llError, 'ERR: '+str);
+ if (Assigned(OnError)) then OnError(Self, errValue, errAddr);
 end;
 
 // Vrati pocet pripojenych zarizeni
@@ -535,22 +532,6 @@ end;
 function TMTBusb.GetErrString(err: word): string;
 begin
     case err of
-      // open 1-10
-      1: Result := 'Zaøízení MTB-USB nelze otevøít';
-      2: Result := 'Zaøízení MTB-USB nelze otevøít, není pøipojeno';
-      3: Result := 'Zaøízení MTB-USB nelze použít - verze FW je menší 0.9.20 ';
-      4: Result := 'Zaøízení MTB-USB bylo odpojeno';
-      // close 11-20
-      11: Result := 'Zaøízení MTB-USB nelze uzavøít';
-      // start 21-30
-      21: Result := 'Nelze spustit komunikaci MTB';
-      22: Result := 'Nelze spustit komunikaci - nenalezeny žádné moduly';
-      25: Result := 'Nelze spustit komunikaci MTB - verze FW je menší 0.9.20';
-      // stop  31-40
-      31: Result := 'Nelze ukonèit komunikaci MTB (není spuštìn)';
-      // mtb-usb  51-100
-
-
       // mtb moduly 101-200
       101: Result := 'Modul neodpovìdìl na pøíkaz - CMD';
       102: Result := 'Modul neodpovìdìl na pøíkaz - CMD, poslední pokus';
@@ -592,12 +573,6 @@ begin
       178: Result := 'Chybný SUM odeslaných dat - SC konfigurace';
       179: Result := 'Chybný SUM odeslaných dat - SC konfigurace - posledni pokus';
 
-      200: Result := 'Jiná chyba';
-      // chyby programu 201-
-      201: Result := 'Chyba pøijatého rámce - chybný paket (provoz)';
-      202: Result := 'Chyba pøijatého rámce - chybný paket (scan)';
-
-      300..310: Result := 'Chyba FTDI driveru';
       else Result := 'Neznámá chyba';
     end;
 end;
@@ -1251,10 +1226,8 @@ begin
             _ERR_CODE: begin
               FErrAddress := (FT_In_Buffer[1]);
               errId := (FT_In_Buffer[2]);
-              LogWrite(llError, 'Chyba '+intToStr(errId)+' addr: '+IntToStr(FT_In_Buffer[1])+' - '+ IntToHex(FT_In_Buffer[1],2)+' '+IntToHex(FT_In_Buffer[2],2)
-                +' '+IntToHex(FT_In_Buffer[3],2)+' '+IntToHex(FT_In_Buffer[4],2)+' '+IntToHex(FT_In_Buffer[5],2)
-                +' '+IntToHex(FT_In_Buffer[6],2)+' '+IntToHex(FT_In_Buffer[7],2));
               Self.WriteError(3000+errId, FErrAddress);
+              Self.LogWrite(llError, 'Chyba '+intToStr(errId)+ ' modulu '+IntToStr(FErrAddress)+': '+Self.GetErrString(errId));
             end;
           end;
           Get_USB_Device_QueueStatus;
@@ -1445,9 +1418,8 @@ begin
               _ERR_CODE: begin
                 FErrAddress := (FT_In_Buffer[(i*8)+1]);
                 errId := (FT_In_Buffer[(i*8)+2]);
-                LogWrite(llError, 'Chyba '+intToStr(errId)+' addr: '+IntToStr(FT_In_Buffer[i*8+1])+' - '+ IntToHex(FT_In_Buffer[i*8+1],2)+' '+IntToHex(FT_In_Buffer[i*8+2],2)
-                  +' '+IntToHex(FT_In_Buffer[i*8+3],2)+' '+IntToHex(FT_In_Buffer[i*8+4],2)+' '+IntToHex(FT_In_Buffer[i*8+5],2)
-                  +' '+IntToHex(FT_In_Buffer[i*8+6],2)+' '+IntToHex(FT_In_Buffer[i*8+7],2));
+                Self.WriteError(errId, FErrAddress);
+                Self.LogWrite(llError, 'Chyba '+intToStr(errId)+ ' modulu '+IntToStr(FErrAddress)+': '+Self.GetErrString(errId));
                 case errId of
                   141:begin // modul nekomunikuje
                     FModule[FErrAddress].revived := False;
@@ -1708,6 +1680,7 @@ begin
         end;
         GetFbData;  // znovu zaslat FB data
         Self.WriteError(MTB_INVALID_PACKET, _DEFAULT_ERR_ADDR);
+        LogWrite(llError, 'Neplatný paket!');
       end;
       if odpoved then changed := True;
       // Pøi zmìnì vyvolá událost
@@ -1720,6 +1693,7 @@ begin
     begin
       Self.LogWrite(llError, 'EXCEPTION (mtbScan): '+e.ClassName+' - '+e.Message);
       Self.WriteError(MTB_FT_EXCEPTION, _DEFAULT_ERR_ADDR);
+      LogWrite(llError, 'FTDI výjimka!');
       if FScanning then Stop;
       Close;
     end;
@@ -1800,9 +1774,13 @@ begin
   if Assigned(BeforeClose) then BeforeClose(Self);
 
   // Reset MTB-USB
-  FT_Out_Buffer[0] := _USB_RST;
-  LogDataOut(1);
-  Write_USB_Device_Buffer(1);
+  try
+    FT_Out_Buffer[0] := _USB_RST;
+    LogDataOut(1);
+    Write_USB_Device_Buffer(1);
+  except
+
+  end;
 
   Close_USB_Device;
   FTimer.Enabled := false;
