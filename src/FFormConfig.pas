@@ -97,7 +97,6 @@ type
     procedure AfterStop(Sender:TObject);
 
     procedure OnLog(Sender: TObject; logLevel:TLogLevel; logValue: string);
-    procedure PM_AboutClick(Sender: TObject);
     procedure PM_CloseClick(Sender: TObject);
     procedure LV_LogCustomDrawItem(Sender: TCustomListView; Item: TListItem;
       State: TCustomDrawState; var DefaultDraw: Boolean);
@@ -115,7 +114,7 @@ var
 implementation
 
 {$R *.dfm}
-uses About, LibraryEvents, LibCML;
+uses LibraryEvents, LibCML;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -163,11 +162,6 @@ begin
    LI.SubItems.Add(MTBdrv.GetModuleTypeName(i));
    LI.SubItems.Add(IntToHex(MTBdrv.GetCfg(i), 8));
  end;
-end;
-
-procedure TFormConfig.PM_AboutClick(Sender: TObject);
-begin
- F_About.Show();
 end;
 
 procedure TFormConfig.PM_CloseClick(Sender: TObject);
@@ -221,7 +215,7 @@ begin
      end;
    end;
 
- Self.Caption := Self.Caption+'        v'+_VERSION;
+ Self.Caption := Self.Caption+'        v'+VERSION;
  Self.PC_Main.ActivePageIndex := 0;
  Self.CB_LogLevel.ItemIndex := Integer(MTBdrv.LogLevel);
 end;

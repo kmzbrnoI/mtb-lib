@@ -331,7 +331,6 @@ object FormConfig: TFormConfig
       Caption = 'N'#225'pov'#283'da'
       object PM_About: TMenuItem
         Caption = 'O knihovn'#283
-        OnClick = PM_AboutClick
       end
     end
   end

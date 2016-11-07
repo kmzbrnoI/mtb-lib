@@ -68,11 +68,13 @@ uses
   FFormConfig in 'FFormConfig.pas' {FormConfig},
   MTBD2XXUnit in 'MTBD2XXUnit.pas',
   FFormModule in 'FFormModule.pas' {FormModule},
-  About in 'About.pas' {F_About},
   MTBusb in 'MTBusb.pas',
   LibraryEvents in 'LibraryEvents.pas',
   Errors in 'Errors.pas',
   LibCML in 'LibCML.pas';
+
+const
+  _VERSION = '2.2.10.0';
 
 {$R *.res}
 
@@ -562,6 +564,5 @@ exports
 begin
   Application.CreateForm(TFormConfig, FormConfig);
   Application.CreateForm(TFormModule, FormModule);
-  Application.CreateForm(TF_About, F_About);
-end.
+  end.
 

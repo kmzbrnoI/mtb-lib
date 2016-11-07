@@ -59,9 +59,6 @@
 			<DCCReference Include="FFormModule.pas">
 				<Form>FormModule</Form>
 			</DCCReference>
-			<DCCReference Include="About.pas">
-				<Form>F_About</Form>
-			</DCCReference>
 			<DCCReference Include="MTBusb.pas"/>
 			<DCCReference Include="LibraryEvents.pas"/>
 			<DCCReference Include="Errors.pas"/>
