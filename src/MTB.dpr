@@ -73,9 +73,6 @@ uses
   Errors in 'Errors.pas',
   LibCML in 'LibCML.pas';
 
-const
-  _VERSION = '2.2.10.0';
-
 {$R *.res}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -460,15 +457,6 @@ begin
  end;
 end;
 
-procedure GetLibVersion(version:PChar; versionLen:Cardinal); stdcall;
-begin
- try
-   StrPLCopy(version, _VERSION, versionLen);
- finally
-
- end;
-end;
-
 ////////////////////////////////////////////////////////////////////////////////
 // Event binders:
 
@@ -555,7 +543,7 @@ exports
   GetInput, GetOutput, SetOutput,
   GetDeviceCount, GetDeviceSerial,
   IsModule, IsModuleFailure, GetModuleCount, GetModuleType, GetModuleName, GetModuleFW,
-  GetDeviceVersion, GetDriverVersion, GetLibVersion,
+  GetDeviceVersion, GetDriverVersion,
   BindBeforeOpen, BindAfterOpen, BindBeforeClose, BindAfterClose,
   BindBeforeStart, BindAfterStart, BindBeforeStop, BindAfterStop,
   BindOnError, BindOnLog, BindOnInputChanged, BindOnOutputChanged;

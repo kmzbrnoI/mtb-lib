@@ -215,7 +215,7 @@ begin
      end;
    end;
 
- Self.Caption := Self.Caption+'        v'+VERSION;
+ Self.Caption := Self.Caption+'        v'+MTBusb.SW_VERSION;
  Self.PC_Main.ActivePageIndex := 0;
  Self.CB_LogLevel.ItemIndex := Integer(MTBdrv.LogLevel);
 end;
