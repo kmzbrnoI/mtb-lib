@@ -27,7 +27,7 @@ object FormConfig: TFormConfig
     Margins.Top = 2
     Margins.Right = 2
     Margins.Bottom = 2
-    ActivePage = TS_Log
+    ActivePage = TS_Device
     Align = alClient
     TabOrder = 0
     ExplicitHeight = 388
@@ -44,11 +44,11 @@ object FormConfig: TFormConfig
         Top = 62
         Width = 87
         Height = 13
-        Caption = 'Rychlost sbernice:'
+        Caption = 'Rychlost sb'#283'rnice:'
       end
       object Label3: TLabel
         Left = 13
-        Top = 17
+        Top = 19
         Width = 64
         Height = 13
         Margins.Left = 2
@@ -70,7 +70,7 @@ object FormConfig: TFormConfig
       end
       object L_LogLevel: TLabel
         Left = 13
-        Top = 217
+        Top = 219
         Width = 43
         Height = 13
         Caption = 'Loglevel:'

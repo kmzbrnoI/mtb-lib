@@ -110,7 +110,7 @@ var
 implementation
 
 {$R *.dfm}
-uses LibraryEvents, LibCML;
+uses LibraryEvents, LibCML, Errors;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -118,16 +118,23 @@ procedure TFormConfig.b_ScanBrdClick(Sender: TObject);
 var
   i,cnt: Integer;
 begin
+ b_ScanBrd.Enabled := false;
  cb_mtbName.Enabled := false;
 
  cb_mtbName.Clear;
  cnt := MTBdrv.GetDeviceCount();
  if (cnt > 0) then
+  begin
    for i := 0 to cnt-1 do
+    begin
      cb_mtbName.Items.Add(MTBdrv.GetDeviceSerial(i));
- cb_mtbName.ItemIndex := -1;
+     if (MTBdrv.GetDeviceSerial(i) = MTBdrv.UsbSerial) then
+       cb_mtbName.ItemIndex := i;
+    end;
+  end;
 
  cb_mtbName.Enabled := true;
+ b_ScanBrd.Enabled := true;
 end;
 
 procedure TFormConfig.CB_LogLevelChange(Sender: TObject);
@@ -293,7 +300,6 @@ procedure TFormConfig.BeforeStart(Sender:TObject);
 begin
  Self.L_Started.Caption := 'spouštím...';
  Self.L_Started.Font.Color := clSilver;
- Self.b_ScanBrd.Enabled := false;
 end;
 
 procedure TFormConfig.AfterStart(Sender:TObject);
@@ -306,8 +312,6 @@ procedure TFormConfig.BeforeStop(Sender:TObject);
 begin
  Self.L_Started.Caption := 'zastavuji...';
  Self.L_Started.Font.Color := clSilver;
- Self.b_ScanBrd.Enabled  := true;
- Self.cb_mtbName.Enabled := true;
 end;
 
 // vyresetovat konfiguraci vsech modulu, ktere nebyly nalezeny
@@ -371,26 +375,7 @@ begin
   begin
    //errors on main board (MTB-USB)
    case (errValue) of
-    21,22,25:begin
-        //start error
-       Self.L_Started.Caption := 'zastavena';
-       Self.L_Started.Font.Color   := clRed;
-     end;
-    31:begin
-      //stop error
-    end;
-    1,2:begin
-      //open error
-     Self.L_Openned.Caption := 'uzavøeno';
-     Self.L_Openned.Font.Color := clRed;
-
-     Self.b_ScanBrd.Enabled  := true;
-     Self.cb_mtbName.Enabled := true;
-     Self.cb_speed.Enabled   := true;
-    end;
-    11:begin
-      //close error
-    end;
+    MTB_FT_EXCEPTION: Self.AfterClose(Self);
    end;//case
   end;//if errAddr = 255
 end;//procedure
