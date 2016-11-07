@@ -35,7 +35,7 @@ interface
 
 const
  MTB_GENERAL_EXCEPTION = 1000;
- MTB_FT_EXCEPTION = 1001;
+ MTB_FT_EXCEPTION = 1001;       // device is always closed when this exception happens
  MTB_FILE_CANNOT_ACCESS = 1010;
  MTB_FILE_DEVICE_OPENED = 1011;
  MTB_MODULE_INVALID_ADDR = 1100;

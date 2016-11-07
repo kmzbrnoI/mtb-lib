@@ -43,7 +43,7 @@ uses
 
 // Verze komponenty
 const
-  SW_VERSION : string = '0.11.0.0';
+  SW_VERSION : string = 'h0.12.0.0';
   MIN_FW_VERSION: Integer = 920;
 
 // verze pro FW 0.9.6 a vyšší
@@ -79,60 +79,59 @@ const
 
 // konstanty pro MTB moduly
 // prikazy:
-const __PWR_ON        = $1*8;
-const __PWR_OFF       = $2*8;
-const __BYPASS_RST    = $4*8;
-const __IDLE          = $8*8;
-const __SEND_ID       = $9*8;
-const __SET_CFG       = $a*8;
+const
+  __PWR_ON        = $1*8;
+  __PWR_OFF       = $2*8;
+  __BYPASS_RST    = $4*8;
+  __IDLE          = $8*8;
+  __SEND_ID       = $9*8;
+  __SET_CFG       = $a*8;
 
-const __SET_OUTB      = $10*8;     {nastaveni jednoho bitu}
-const __READ_FEED     = $11*8;
-const __SET_REG_U     = $12*8;
-const __SET_OUTW      = $13*8;     {nastaveni vsech 16 vystupu- puvodni OPkod = 12h!!!, novy=13h}
-const __FLICK_OUT     = $14*8;
-const __SET_NAVEST    = $15*8;      {nastaveni kodu navesti S-com}
-const __READ_POT      = $16*8;      {cteni stavu potenciometru}
+  __SET_OUTB      = $10*8;     {nastaveni jednoho bitu}
+  __READ_FEED     = $11*8;
+  __SET_REG_U     = $12*8;
+  __SET_OUTW      = $13*8;     {nastaveni vsech 16 vystupu- puvodni OPkod = 12h!!!, novy=13h}
+  __FLICK_OUT     = $14*8;
+  __SET_NAVEST    = $15*8;      {nastaveni kodu navesti S-com}
+  __READ_POT      = $16*8;      {cteni stavu potenciometru}
 
 // ID modulu
-const  MTB_POT_ID     = $10;
-const  MTB_REGP_ID    = $30;
-const  MTB_UNI_ID     = $40;
-const  MTB_UNIOUT_ID  = $50;
-const  MTB_TTL_ID     = $60;
-const  MTB_TTLOUT_ID  = $70;
+const
+  MTB_POT_ID     = $10;
+  MTB_REGP_ID    = $30;
+  MTB_UNI_ID     = $40;
+  MTB_UNIOUT_ID  = $50;
+  MTB_TTL_ID     = $60;
+  MTB_TTLOUT_ID  = $70;
 
 // Konstanty programu
-const  _MTB_MAX_ADDR = 191;
-// const  _PORT_MAX_NUM = 4095;    // 256*16-1;
+const _MTB_MAX_ADDR = 191;
 
-const  _REG_ADDR = $80;    // 128..159      REG 32 adres
-const  _POT_ADDR = $a0;    // 160..175      POT 16 adres
-const  _REG_CHANN = 256;
-const  _POT_CHANN = 64;
+const
+  _REG_ADDR = $80;    // 128..159      REG 32 adres
+  _POT_ADDR = $a0;    // 160..175      POT 16 adres
+  _REG_CHANN = 256;
+  _POT_CHANN = 64;
 
-const  _END_BYTE = 11;  // hodnota posledniho byte v paketu
-
-//{$R MTBusb.res}
-//{$R MTBusb.dcr}
+  _END_BYTE = 11;  // hodnota posledniho byte v paketu
 
 type
-    TAddr       = 0..191;   // Rozsah povolenych adres
-    TIOaddr     = 0..191;  // Rozsah adres UNI, TTL
-    TIOchann    = 0..15;   // Rozsah kanalu UNI,TTL
-    TregAddr    = 128..159;  // Rezsah Reg adres
-    TRegChann   = 0..255;  // Rozsah kanalu regulatoru
-    TRegOut     = 0..7;    // Rozsah vystupu regulatoru
-    TRegSpeed   = 0..15;   // Rychlost regulatoru
-    TRegDirect  = 0..1;    // Smer Regulatoru
-    TRegAcctime = 0..20;   // Casova rampa regulatoru
-    TPotAddr    = 160..175; // Rozsah pro adresy POT
-    TPotChann   = 0..63;   // Hodnota kanálu potenciometru
-    TPotInp     = 0..3;     // Rozsah pro vstupy POT
-    TPotValue   = 0..15;   // Hodnota potenciometru
-    TPotDirect  = 0..1;    // Smer potenciometru
-    TPortValue  = 0..4095; // Hodnota Portu
-   // TFlickSet   = 0..2;    //
+  // Ranges & sub-types:
+  TAddr       = 0..191;   // Rozsah povolenych adres
+  TIOaddr     = 0..191;  // Rozsah adres UNI, TTL
+  TIOchann    = 0..15;   // Rozsah kanalu UNI,TTL
+  TregAddr    = 128..159;  // Rezsah Reg adres
+  TRegChann   = 0..255;  // Rozsah kanalu regulatoru
+  TRegOut     = 0..7;    // Rozsah vystupu regulatoru
+  TRegSpeed   = 0..15;   // Rychlost regulatoru
+  TRegDirect  = 0..1;    // Smer Regulatoru
+  TRegAcctime = 0..20;   // Casova rampa regulatoru
+  TPotAddr    = 160..175; // Rozsah pro adresy POT
+  TPotChann   = 0..63;   // Hodnota kanálu potenciometru
+  TPotInp     = 0..3;     // Rozsah pro vstupy POT
+  TPotValue   = 0..15;   // Hodnota potenciometru
+  TPotDirect  = 0..1;    // Smer potenciometru
+  TPortValue  = 0..4095; // Hodnota Portu
 
   // Exceptions
   EAlreadyOpened = class(Exception);
@@ -156,19 +155,15 @@ type
   TTimerInterval = (ti50 = 50, ti100 = 100, ti200 = 200, ti250 = 250);
 
   TMtbSpeed = (sp38400 = 2, sp57600 = 3, sp115200 = 4);
-  //TMtbSpeed_x = sp38400..sp115200;
 
   TModulConfigGet = record
     CFGdata: array[0..3] of byte;
     CFGnum: byte;
-    //CFGsetting : byte;
     CFGpopis : string;
     CFGfw : string;
   end;
   TModulConfigSet = record
     CFGdata: array[0..3] of byte;
-    //CFGnum: byte;
-    //CFGsetting : byte;
     CFGpopis : string;
   end;
   TPort = record
@@ -190,14 +185,10 @@ type
     RegSpeed   : TRegSpeed;
     RegDirect  : TRegDirect;
     RegAcctime : TRegAcctime;
-    //RegSpeedOld   : TRegSpeed;
-    //RegDirectOld  : TRegDirect;
-    //RegAcctimeOld : TRegAcctime;
   end;
   TPortRegOver = record
     value : boolean;
     inUp  : boolean;
-    //inDn  : boolean;
   end;
   TPot = record
     PotValue : TPotValue;
@@ -209,11 +200,6 @@ type
     ScomActive: array[0..7] of Boolean;  // true, pokud je Scom vystup aktivni
     changed: array[0..7] of Boolean;     // nastavi priznak pri zmene
   end;
-  //TFlickh = record
-    //Flick: Array[0..15] of TFlickSet;
-    //FlickName: Array[0..15] of string;
-    //changed: boolean;
-  //end;
   TModule = object
     name: string;
     popis: string;
@@ -255,7 +241,6 @@ type
     FPortOut: array[0.._PORT_MAX_NUM] of TPortOut;
     FRegOver: array[0.._PORTOVER_MAX_NUM] of TPortRegOver;
     FReg: Array[0..255] of TReg;
-    // FCFGdata: TCFG_data;
     FPotChanged   : Boolean;    // zmena vstupu POT
     FOverChanged  : Boolean;    // zmena vstupu REG - pretizeni
     FInputChanged : Boolean;    // zmena vstupu IO - UNI/TTL
@@ -334,6 +319,7 @@ type
 
   protected
     { Protected declarations }
+
   public
     { Public declarations }
 
@@ -406,9 +392,9 @@ type
 
     procedure GetFbData;   // zadost o FB data
 
-    procedure SetCyclesData(value: Byte);   // 23.1.2012
+    procedure SetCyclesData(value: Byte);
 
-    procedure XMemWr(mAddr: word; mData : Byte);  // 10.2.2012 testovani dat XRAM
+    procedure XMemWr(mAddr: word; mData : Byte);
     procedure XMemRd(mAddr: word);
 
     procedure LoadConfig(fn:string);
@@ -432,14 +418,14 @@ type
     property PotChanged: boolean read FPotChanged;
     property OverChanged: boolean read FOverChanged;
 
-    property Pot[chann : TPotChann]: TPot read GetPotValue; //        XPot : array[0..15] of TPot;
+    property Pot[chann : TPotChann]: TPot read GetPotValue;
     property InPortDifUp[port : TPortValue]: boolean read GetInPortDifUp;
     property InPortDifDn[port : TPortValue]: boolean read GetInPortDifDn;
     property InPortValue[port : TPortValue]: boolean read GetInPort write SetInPort;
     property OutPortValue[port : TPortValue]: boolean read GetOutPort write SetOutPort;
 
-    property ModuleStatus[addr : TAddr]: byte read GetModuleStatus;    // 19.4.2007
-    property RegOver[chann : TRegChann]: TPortRegOver read GetRegOverValue; //        XPot : array[0..15] of TPot;
+    property ModuleStatus[addr : TAddr]: byte read GetModuleStatus;
+    property RegOver[chann : TRegChann]: TPortRegOver read GetRegOverValue;
     property LogLevel: TLogLevel read FLogLevel write FLogLevel;
 
   published
@@ -467,6 +453,7 @@ type
     property AfterStart : TNotifyEvent read FAfterStart write FAfterStart;
     property BeforeStop : TNotifyEvent read FBeforeStop write FBeforeStop;
     property AfterStop : TNotifyEvent read FAfterStop write FAfterStop;
+
   end;
 
 procedure Register;
@@ -1731,13 +1718,13 @@ begin
   except
    on E:EFtGeneral do
     begin
-      // TODO: test when this code is reached the code in e:exception is reached too
+      Self.LogWrite(llError, 'EXCEPTION (mtbScan): '+e.ClassName+' - '+e.Message);
       Self.WriteError(MTB_FT_EXCEPTION, _DEFAULT_ERR_ADDR);
       if FScanning then Stop;
       Close;
     end;
    on e:Exception do
-     Self.LogWrite(llError, 'EXCEPTION (mtbScan): : '+e.Message);
+     Self.LogWrite(llError, 'EXCEPTION (mtbScan): '+e.ClassName+' - '+e.Message);
   end;
 end;
 
@@ -1884,8 +1871,6 @@ begin
       FPot[i].PotDirect := 0;
     end;
 
-    Setpriorityclass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-
     FT_Out_Buffer[0] := _MTB_SET + 1;
     FT_Out_Buffer[1] := 0;
     LogDataOut(2);
@@ -1943,15 +1928,12 @@ begin
   if (Assigned(BeforeStop)) then BeforeStop(Self);
 
   try
-    // doplnit odeslani dat pro moduly
     FT_Out_Buffer[0] := _COM_OFF;                  // zastavení skenování
     LogDataOut(1);
     Write_USB_Device_Buffer(1);
 
     FScanning := false;
     LogWrite(llChange, 'Zastavení komunikace');
-    Setpriorityclass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
-    // vynulovat hodnoty !! doplnit asi !!
     for i := 1 to _MTB_MAX_ADDR do begin
       FModule[i].Status := 0;
     end;

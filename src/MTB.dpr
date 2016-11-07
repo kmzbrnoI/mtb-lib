@@ -10,7 +10,7 @@
 {
    LICENSE:
 
-   Copyright 2015 Petr Travnik, Michal Petrilak, Jan Horacek
+   Copyright 2015-2016 Petr Travnik, Michal Petrilak, Jan Horacek
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -274,10 +274,8 @@ begin
    end;
 
  except
-    on E:EFtGeneral do
-      Result := MTB_FT_EXCEPTION;
-    on E:Exception do
-      Result := MTB_GENERAL_EXCEPTION;
+  // ft exception cannot happen here
+  Result := MTB_GENERAL_EXCEPTION;
  end;
 end;
 
@@ -303,10 +301,8 @@ begin
     end;
 
   except
-    on E:EFtGeneral do
-      Result := MTB_FT_EXCEPTION;
-    on E:Exception do
-      Result := MTB_GENERAL_EXCEPTION;
+    // ft exception cnnot happen here
+    Result := MTB_GENERAL_EXCEPTION;
   end;
 end;
 
@@ -338,10 +334,8 @@ begin
 
     Result := 0;
   except
-    on E:EInvalidScomCode do
-      Result := MTB_INVALID_SCOM_CODE;
-    on E:Exception do
-      Result := MTB_GENERAL_EXCEPTION;
+   // FT exception cannot happen here
+   Result := MTB_GENERAL_EXCEPTION;
   end;
 end;//function
 
@@ -398,10 +392,7 @@ begin
  try
    Result := MTBdrv.ModuleCount;
  except
-    on E:EFtGeneral do
-      Result := MTB_FT_EXCEPTION;
-    on E:Exception do
-      Result := MTB_GENERAL_EXCEPTION;
+   Result := MTB_GENERAL_EXCEPTION;
  end;
 end;
 
@@ -411,10 +402,7 @@ begin
    if ((not InRange(module, Low(TAddr), High(TAddr))) or (not MTBdrv.IsModule(module))) then Exit(MTB_MODULE_INVALID_ADDR);
    Result := Integer(MTBdrv.GetModuleInfo(module).typ);
  except
-    on E:EFtGeneral do
-      Result := MTB_FT_EXCEPTION;
-    on E:Exception do
-      Result := MTB_GENERAL_EXCEPTION;
+   Result := MTB_GENERAL_EXCEPTION;
  end;
 end;
 
@@ -425,10 +413,7 @@ begin
    StrPLCopy(name, MTBdrv.GetModuleInfo(module).name, nameLen);
    Result := 0;
  except
-    on E:EFtGeneral do
-      Result := MTB_FT_EXCEPTION;
-    on E:Exception do
-      Result := MTB_GENERAL_EXCEPTION;
+   Result := MTB_GENERAL_EXCEPTION;
  end;
 end;
 
@@ -439,10 +424,7 @@ begin
    StrPLCopy(fw, MTBdrv.GetModuleInfo(module).firmware, fwLen);
    Result := 0;
  except
-    on E:EFtGeneral do
-      Result := MTB_FT_EXCEPTION;
-    on E:Exception do
-      Result := MTB_GENERAL_EXCEPTION;
+   Result := MTB_GENERAL_EXCEPTION;
  end;
 end;
 
@@ -577,5 +559,4 @@ begin
   Application.CreateForm(TFormModule, FormModule);
   Application.CreateForm(TF_About, F_About);
 end.
-
 
