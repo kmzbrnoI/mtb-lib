@@ -39,7 +39,6 @@ uses MTBusb;
 type
   TCML = class
     private
-      procedure MTBOnScanned(Sender:TObject);
       procedure MTBOnChange(Sender:TObject);
       procedure MTBOnInputChanged(Sender: TObject; module: byte);
       procedure MTBOnOutputChanged(Sender: TObject; module: byte);
@@ -80,7 +79,6 @@ begin
  MTBdrv.OnError         := Self.OnError;
  MTBdrv.OnLog           := Self.OnLog;
  MTBdrv.OnChange        := self.MTBOnChange;
- MTBdrv.OnScan          := Self.MTBOnScanned;
  MTBdrv.OnInputChange   := Self.MTBOnInputChanged;
  MTBdrv.OnOutputChange  := Self.MTBOnOutputChanged;
 
@@ -103,11 +101,6 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-
-procedure TCML.MTBOnScanned(Sender:TObject);
-begin
- if (Assigned(FormConfig)) then FormConfig.OnScanned(Sender);
-end;
 
 procedure TCML.MTBBeforeOpen(Sender:TObject);
 begin

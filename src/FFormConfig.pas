@@ -52,7 +52,6 @@ type
     TS_Log: TTabSheet;
     l_3: TLabel;
     l_modcount: TLabel;
-    lv_modules: TListView;
     Label1: TLabel;
     Label2: TLabel;
     L_Openned: TLabel;
@@ -62,17 +61,13 @@ type
     b_ScanBrd: TButton;
     l_2: TLabel;
     RG_TimerInterval: TRadioGroup;
-    MM_Main: TMainMenu;
-    MI_Window: TMenuItem;
-    PM_Close: TMenuItem;
-    PM_Help: TMenuItem;
-    PM_About: TMenuItem;
     LV_Log: TListView;
     Label3: TLabel;
     Label4: TLabel;
     B_DeleteNonExist: TButton;
     L_LogLevel: TLabel;
     CB_LogLevel: TComboBox;
+    lv_modules: TListView;
     procedure b_ScanBrdClick(Sender: TObject);
     procedure lv_modulesDblClick(Sender: TObject);
     procedure cb_mtbNameChange(Sender: TObject);
@@ -97,7 +92,6 @@ type
     procedure AfterStop(Sender:TObject);
 
     procedure OnLog(Sender: TObject; logLevel:TLogLevel; logValue: string);
-    procedure PM_CloseClick(Sender: TObject);
     procedure LV_LogCustomDrawItem(Sender: TCustomListView; Item: TListItem;
       State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure B_DeleteNonExistClick(Sender: TObject);
@@ -164,11 +158,6 @@ begin
  end;
 end;
 
-procedure TFormConfig.PM_CloseClick(Sender: TObject);
-begin
- Self.Hide();
-end;
-
 procedure TFormConfig.lv_modulesDblClick(Sender: TObject);
 begin
  if (lv_modules.Selected <> nil) then
@@ -222,20 +211,20 @@ end;
 
 procedure TFormConfig.LV_LogCustomDrawItem(Sender: TCustomListView;
   Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
-var str:string;
+var logLevel:TLogLevel;
 begin
  (Sender as TCustomListView).Canvas.Brush.Color := clWhite;
 
  if (Item.SubItems.Count > 0) then
   begin
-   str := LeftStr(Item.SubItems.Strings[0],3);
+   try
+     logLevel := TLogLevel(ord(Item.SubItems.Strings[0][1]) - ord('0'));
+     if (logLevel = MTBusb.llError) then (Sender as TCustomListView).Canvas.Brush.Color := $DDDDFF
+     else if (logLevel = MTBusb.llChange) then (Sender as TCustomListView).Canvas.Brush.Color := $FFEEEE
+     else if (logLevel = MTBusb.llCmd) then (Sender as TCustomListView).Canvas.Brush.Color := $EEFFEE;
+   except
 
-   if (str = 'ERR') then (Sender as TCustomListView).Canvas.Brush.Color := $AAFFFF;
-
-   str := RightStr(Item.SubItems.Strings[0],Length(Item.SubItems.Strings[0])-13);
-   str := LeftStr(str,7);
-   if (str = 'Data in') then (Sender as TCustomListView).Canvas.Brush.Color := $FFD0D0;
-   if (str = 'Data ou') then (Sender as TCustomListView).Canvas.Brush.Color := $A0FFD0;
+   end;
   end;
 end;
 
@@ -264,6 +253,7 @@ end;
 
 procedure TFormConfig.BeforeOpen(Sender:TObject);
 begin
+ Self.l_modcount.Caption := 'hledám...';
  Self.L_Openned.Caption := 'otevírám...';
  Self.L_Openned.Font.Color := clSilver;
 
@@ -287,6 +277,9 @@ end;
 
 procedure TFormConfig.AfterClose(Sender:TObject);
 begin
+ Self.l_modcount.Caption := '?';
+ Self.lv_modules.Color := $EDEDED;
+ Self.lv_modules.Clear();
  Self.L_Openned.Caption := 'uzavøeno';
  Self.L_Openned.Font.Color := clRed;
  Self.cb_speed.Enabled   := true;
@@ -350,15 +343,15 @@ begin
  if (Self.LV_Log.Items.Count > 1000) then
   Self.LV_Log.Clear();
 
- DateTimeToString(timeStr, 'hh:mm:ss.zzz', time);
+ DateTimeToString(timeStr, 'hh:mm:ss', time);
  LI := Self.LV_Log.Items.Insert(0);
  LI.Caption := timeStr;
  case (logLevel) of
-  llError  : LI.SubItems.Add('Error');
-  llChange : LI.SubItems.Add('Zmìna');
-  llCmd    : LI.SubItems.Add('Pøíkaz');
-  llRawCmd : LI.SubItems.Add('RAW');
-  llDebug  : LI.SubItems.Add('Debug');
+  llError  : LI.SubItems.Add('1: Error');
+  llChange : LI.SubItems.Add('2: Zmìna');
+  llCmd    : LI.SubItems.Add('3: Pøíkaz');
+  llRawCmd : LI.SubItems.Add('4: RAW');
+  llDebug  : LI.SubItems.Add('5: Debug');
  else
   LI.SubItems.Add('');
  end;

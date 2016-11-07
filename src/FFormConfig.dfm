@@ -4,7 +4,7 @@ object FormConfig: TFormConfig
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'MTB konfigurace'
-  ClientHeight = 388
+  ClientHeight = 408
   ClientWidth = 529
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -12,7 +12,6 @@ object FormConfig: TFormConfig
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  Menu = MM_Main
   OldCreateOrder = False
   Position = poScreenCenter
   OnCloseQuery = FormCloseQuery
@@ -23,14 +22,15 @@ object FormConfig: TFormConfig
     Left = 0
     Top = 0
     Width = 529
-    Height = 388
+    Height = 408
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
     Margins.Bottom = 2
-    ActivePage = TS_Device
+    ActivePage = TS_Log
     Align = alClient
     TabOrder = 0
+    ExplicitHeight = 388
     object TS_Device: TTabSheet
       Margins.Left = 2
       Margins.Top = 2
@@ -38,6 +38,7 @@ object FormConfig: TFormConfig
       Margins.Bottom = 2
       Caption = 'P'#345'ipojen'#237
       ImageIndex = 1
+      ExplicitHeight = 360
       object l_2: TLabel
         Left = 13
         Top = 62
@@ -148,6 +149,7 @@ object FormConfig: TFormConfig
       Margins.Right = 2
       Margins.Bottom = 2
       Caption = 'Stav p'#345'ipojen'#237
+      ExplicitHeight = 360
       object Label1: TLabel
         Left = 15
         Top = 13
@@ -214,6 +216,7 @@ object FormConfig: TFormConfig
       Margins.Bottom = 2
       Caption = 'MTB moduly'
       ImageIndex = 2
+      ExplicitHeight = 360
       object l_3: TLabel
         Left = 10
         Top = 12
@@ -226,38 +229,7 @@ object FormConfig: TFormConfig
         Top = 12
         Width = 6
         Height = 13
-        Alignment = taRightJustify
-        Caption = '0'
-      end
-      object lv_modules: TListView
-        Left = 0
-        Top = 44
-        Width = 521
-        Height = 316
-        Align = alBottom
-        Columns = <
-          item
-            Caption = 'N'#225'zev'
-            Width = 280
-          end
-          item
-            Caption = 'Adresa'
-          end
-          item
-            Caption = 'Typ'
-            Width = 70
-          end
-          item
-            Caption = 'Nastaven'#237
-            Width = 65
-          end>
-        GridLines = True
-        ReadOnly = True
-        RowSelect = True
-        PopupMenu = pm_mod
-        TabOrder = 0
-        ViewStyle = vsReport
-        OnDblClick = lv_modulesDblClick
+        Caption = '?'
       end
       object B_DeleteNonExist: TButton
         Left = 288
@@ -265,8 +237,37 @@ object FormConfig: TFormConfig
         Width = 223
         Height = 25
         Caption = 'Vymazat konfiguraci neexistuj'#237'c'#237'ch modul'#367
-        TabOrder = 1
+        TabOrder = 0
         OnClick = B_DeleteNonExistClick
+      end
+      object lv_modules: TListView
+        Left = 0
+        Top = 48
+        Width = 521
+        Height = 332
+        Align = alBottom
+        Color = 15592941
+        Columns = <
+          item
+            Caption = 'N'#225'zev'
+            Width = 250
+          end
+          item
+            Caption = 'Adresa'
+          end
+          item
+            Caption = 'Typ'
+            Width = 80
+          end
+          item
+            Caption = 'Konfigurace'
+            Width = 80
+          end>
+        GridLines = True
+        ReadOnly = True
+        RowSelect = True
+        TabOrder = 1
+        ViewStyle = vsReport
       end
     end
     object TS_Log: TTabSheet
@@ -276,11 +277,12 @@ object FormConfig: TFormConfig
       Margins.Bottom = 2
       Caption = 'Log'
       ImageIndex = 3
+      ExplicitHeight = 360
       object LV_Log: TListView
         Left = 0
         Top = 0
         Width = 521
-        Height = 360
+        Height = 380
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
@@ -289,7 +291,7 @@ object FormConfig: TFormConfig
         Columns = <
           item
             Caption = #268'as'
-            Width = 80
+            Width = 60
           end
           item
             Caption = 'LogLevel'
@@ -305,6 +307,7 @@ object FormConfig: TFormConfig
         TabOrder = 0
         ViewStyle = vsReport
         OnCustomDrawItem = LV_LogCustomDrawItem
+        ExplicitHeight = 360
       end
     end
   end
@@ -315,23 +318,6 @@ object FormConfig: TFormConfig
     object pm_mod_nastaveni: TMenuItem
       Caption = 'Diagnostika'
       OnClick = pm_mod_nastaveniClick
-    end
-  end
-  object MM_Main: TMainMenu
-    Left = 336
-    Top = 296
-    object MI_Window: TMenuItem
-      Caption = 'Okno'
-      object PM_Close: TMenuItem
-        Caption = 'Zav'#345#237't'
-        OnClick = PM_CloseClick
-      end
-    end
-    object PM_Help: TMenuItem
-      Caption = 'N'#225'pov'#283'da'
-      object PM_About: TMenuItem
-        Caption = 'O knihovn'#283
-      end
     end
   end
 end
