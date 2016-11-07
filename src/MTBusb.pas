@@ -1796,6 +1796,7 @@ end;
 procedure TMTBusb.Close();
 begin
  try
+  if (not Self.Openned) then Exit();  
   if Assigned(BeforeClose) then BeforeClose(Self);
 
   // Reset MTB-USB

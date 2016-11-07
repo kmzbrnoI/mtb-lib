@@ -188,6 +188,9 @@ end;
 function Close():Integer; stdcall;
 begin
   try
+    if (MTBdrv.OpeningScanning) then Exit(MTB_SCANNING_NOT_FINISHED);
+    if (not MTBdrv.Openned) then Exit(MTB_NOT_OPENED);
+    
     MTBdrv.Close();
     Result := 0;
   except
