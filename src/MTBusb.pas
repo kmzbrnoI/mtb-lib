@@ -481,7 +481,7 @@ end;
 
 procedure TMTBusb.LogWrite(ll:TLogLevel; msg:string);
 begin
-  if ((ll >= Self.LogLevel) and (Assigned(OnLog))) then
+  if ((ll <= Self.LogLevel) and (Assigned(OnLog))) then
     OnLog(Self, ll, msg);
 end;
 
@@ -1216,9 +1216,9 @@ begin
               pocetModulu := FT_In_Buffer[1];
               FScan_flag := false;
               FSeznam_flag := True;
+              FOpenned := True;
               LogWrite(llChange, 'Ukonèeno hledání modulù');
               if FModuleCount <> pocetModulu then begin
-                FOpenned := True;
                 FModuleCount := 0;
                 WriteError(MTB_INVALID_MODULES_COUNT, _DEFAULT_ERR_ADDR);
                 LogWrite(llError, 'Nespravný poèet nalezených modulù');
@@ -1733,7 +1733,7 @@ procedure TMTBusb.Open(serial_num: String);
 var
   i: word;
 begin
-  if (FOpenned) then raise EAlreadyOpened.Create('MTB already opened');
+  if ((FOpenned) or (FScan_flag)) then raise EAlreadyOpened.Create('MTB already opened');
   if (FScanning) then raise EAlreadyStarted.Create('MTB already started');
 
   LogWrite(llCmd, 'Otevírám zaøízení ' + UsbSerial);
@@ -2059,6 +2059,7 @@ begin
  ini.WriteInteger('MTB', 'speed', Integer(Self.FSpeed));
  ini.WriteInteger('MTB', 'timer', Integer(Self.FScanInterval));
  ini.WriteString('MTB', 'device', Self.FusbName);
+ ini.WriteInteger('MTB', 'LogLevel', Integer(Self.FLogLevel));
  ini.UpdateFile;
  ini.Free;
 end;

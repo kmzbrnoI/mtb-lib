@@ -521,8 +521,6 @@ procedure BindOnLog(event:TStdLogEvent; data:Pointer); stdcall;
 begin
  LibEvents.OnLog.data  := data;
  LibEvents.OnLog.event := event;
- FormConfig.CB_LogLevel.Visible := Assigned(event);
- FormConfig.L_LogLevel.Visible  := Assigned(event);
 end;
 
 procedure BindOnInputChanged(event:TStdModuleChangeEvent; data:Pointer); stdcall;

@@ -88,9 +88,9 @@
 						<Source Name="MainSource">MTB.dpr</Source>
 					</Source>
 					<Parameters>
-						<Parameters Name="HostApplication">D:\UsersData\Vlak\Delphi\hJOPserver\output\hJOPserver.exe</Parameters>
+						<Parameters Name="HostApplication">D:\UsersData\Vlak\KMZ\MTB\test-mtb-dll\testMtbDll.exe</Parameters>
 						<Parameters Name="UseLauncher">False</Parameters>
-						<Parameters Name="DebugCWD">D:\UsersData\Vlak\Delphi\hJOPserver\output\</Parameters>
+						<Parameters Name="DebugCWD">D:\UsersData\Vlak\KMZ\MTB\MTB_knihovna_v2\output</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
 					</Parameters>

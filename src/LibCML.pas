@@ -106,73 +106,73 @@ end;
 
 procedure TCML.MTBOnScanned(Sender:TObject);
 begin
- FormConfig.OnScanned(Sender);
+ if (Assigned(FormConfig)) then FormConfig.OnScanned(Sender);
 end;
 
 procedure TCML.MTBBeforeOpen(Sender:TObject);
 begin
- FormConfig.BeforeOpen(Sender);
+ if (Assigned(FormConfig)) then FormConfig.BeforeOpen(Sender);
  if (Assigned(LibEvents.BeforeOpen.event)) then LibEvents.BeforeOpen.event(Self, LibEvents.BeforeOpen.data);
 end;
 
 procedure TCML.MTBAfterOpen(Sender:TObject);
 begin
- FormConfig.AfterOpen(Sender);
+ if (Assigned(FormConfig)) then FormConfig.AfterOpen(Sender);
  if (Assigned(LibEvents.AfterOpen.event)) then LibEvents.AfterOpen.event(Self, LibEvents.AfterOpen.data);
 end;
 
 procedure TCML.MTBBeforeClose(Sender:TObject);
 begin
- FormConfig.BeforeClose(Sender);
+ if (Assigned(FormConfig)) then FormConfig.BeforeClose(Sender);
  if (Assigned(LibEvents.BeforeClose.event)) then LibEvents.BeforeClose.event(Self, LibEvents.BeforeClose.data);
 end;
 
 procedure TCML.MTBAfterClose(Sender:TObject);
 begin
- FormConfig.AfterClose(Sender);
+ if (Assigned(FormConfig)) then FormConfig.AfterClose(Sender);
  if (Assigned(LibEvents.AfterClose.event)) then LibEvents.AfterClose.event(Self, LibEvents.AfterClose.data);
 end;
 
 procedure TCML.MTBBeforeStart(Sender:TObject);
 begin
- FormConfig.BeforeStart(Sender);
+ if (Assigned(FormConfig)) then FormConfig.BeforeStart(Sender);
  if (Assigned(LibEvents.BeforeStart.event)) then LibEvents.BeforeStart.event(Self, LibEvents.BeforeStart.data);
 end;
 
 procedure TCML.MTBAfterStart(Sender:TObject);
 begin
- FormConfig.AfterStart(Sender);
+ if (Assigned(FormConfig)) then FormConfig.AfterStart(Sender);
  if (Assigned(LibEvents.AfterStart.event)) then LibEvents.AfterStart.event(Self, LibEvents.AfterStart.data);
- FormModule.RefreshStates();
+ if (Assigned(FormModule)) then FormModule.RefreshStates();
 end;
 
 procedure TCML.MTBBeforeStop(Sender:TObject);
 begin
- FormConfig.BeforeStop(Sender);
+ if (Assigned(FormConfig)) then FormConfig.BeforeStop(Sender);
  if (Assigned(LibEvents.BeforeStop.event)) then LibEvents.BeforeStop.event(Self, LibEvents.BeforeStop.data);
- FormModule.RefreshStates();
+ if (Assigned(FormModule)) then FormModule.RefreshStates();
 end;
 
 procedure TCML.MTBAfterStop(Sender:TObject);
 begin
- FormConfig.AfterStop(Sender);
+ if (Assigned(FormConfig)) then FormConfig.AfterStop(Sender);
  if (Assigned(LibEvents.AfterStop.event)) then LibEvents.AfterStop.event(Self, LibEvents.AfterStop.data);
 end;
 
 procedure TCML.MTBOnChange(Sender:TObject);
 begin
- FormModule.OnChange(Sender);
+ if (Assigned(FormModule)) then FormModule.OnChange(Sender);
 end;
 
 procedure TCML.OnLog(Sender: TObject; ll:TLogLevel; logValue: string);
 begin
- FormConfig.OnLog(Sender, ll, logValue);
+ if (Assigned(FormConfig)) then FormConfig.OnLog(Sender, ll, logValue);
  if (Assigned(LibEvents.OnLog.event)) then LibEvents.OnLog.event(Self, LibEvents.OnLog.data, Integer(ll), PChar(logValue));
 end;
 
 procedure TCML.OnError(Sender: TObject; errValue: word; errAddr: byte);
 begin
- FormConfig.OnError(Sender, errValue, errAddr);
+ if (Assigned(FormConfig)) then FormConfig.OnError(Sender, errValue, errAddr);
  if (Assigned(LibEvents.OnError.event)) then
    LibEvents.OnError.event(Self, LibEvents.OnError.data, errValue, errAddr, PChar(MTBdrv.GetErrString(errValue)));
 end;
@@ -190,11 +190,11 @@ end;
 ////////////////////////////////////////////////////////////////////////////////
 
 initialization
-  CML := TCML.Create();
   MTBDrv := TMTBusb.Create(nil, 'mtb');
+  CML := TCML.Create();
 
 finalization
-  CML.Free();
   MTBdrv.Free();
+  CML.Free();
 
 end.

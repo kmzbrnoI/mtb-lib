@@ -28,7 +28,7 @@ object FormConfig: TFormConfig
     Margins.Top = 2
     Margins.Right = 2
     Margins.Bottom = 2
-    ActivePage = TS_Log
+    ActivePage = TS_Device
     Align = alClient
     TabOrder = 0
     object TS_Device: TTabSheet
@@ -73,7 +73,6 @@ object FormConfig: TFormConfig
         Width = 43
         Height = 13
         Caption = 'Loglevel:'
-        Visible = False
       end
       object cb_mtbName: TComboBox
         Left = 13
@@ -133,7 +132,6 @@ object FormConfig: TFormConfig
         Style = csDropDownList
         ItemHeight = 13
         TabOrder = 4
-        Visible = False
         OnChange = CB_LogLevelChange
         Items.Strings = (
           'Nic'
