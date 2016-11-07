@@ -266,8 +266,10 @@ object FormConfig: TFormConfig
         GridLines = True
         ReadOnly = True
         RowSelect = True
+        PopupMenu = pm_mod
         TabOrder = 1
         ViewStyle = vsReport
+        OnDblClick = lv_modulesDblClick
       end
     end
     object TS_Log: TTabSheet
@@ -280,14 +282,14 @@ object FormConfig: TFormConfig
       ExplicitHeight = 360
       object LV_Log: TListView
         Left = 0
-        Top = 0
+        Top = 40
         Width = 521
-        Height = 380
+        Height = 340
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
         Margins.Bottom = 2
-        Align = alClient
+        Align = alBottom
         Columns = <
           item
             Caption = #268'as'
@@ -307,7 +309,15 @@ object FormConfig: TFormConfig
         TabOrder = 0
         ViewStyle = vsReport
         OnCustomDrawItem = LV_LogCustomDrawItem
-        ExplicitHeight = 360
+      end
+      object B_ClearLog: TButton
+        Left = 3
+        Top = 6
+        Width = 75
+        Height = 25
+        Caption = 'Smazat'
+        TabOrder = 1
+        OnClick = B_ClearLogClick
       end
     end
   end

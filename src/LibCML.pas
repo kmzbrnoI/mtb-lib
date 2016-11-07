@@ -143,13 +143,13 @@ procedure TCML.MTBBeforeStop(Sender:TObject);
 begin
  if (Assigned(FormConfig)) then FormConfig.BeforeStop(Sender);
  if (Assigned(LibEvents.BeforeStop.event)) then LibEvents.BeforeStop.event(Self, LibEvents.BeforeStop.data);
- if (Assigned(FormModule)) then FormModule.RefreshStates();
 end;
 
 procedure TCML.MTBAfterStop(Sender:TObject);
 begin
  if (Assigned(FormConfig)) then FormConfig.AfterStop(Sender);
  if (Assigned(LibEvents.AfterStop.event)) then LibEvents.AfterStop.event(Self, LibEvents.AfterStop.data);
+ if (Assigned(FormModule)) then FormModule.RefreshStates();
 end;
 
 procedure TCML.MTBOnChange(Sender:TObject);

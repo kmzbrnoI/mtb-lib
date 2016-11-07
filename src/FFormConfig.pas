@@ -68,6 +68,7 @@ type
     L_LogLevel: TLabel;
     CB_LogLevel: TComboBox;
     lv_modules: TListView;
+    B_ClearLog: TButton;
     procedure b_ScanBrdClick(Sender: TObject);
     procedure lv_modulesDblClick(Sender: TObject);
     procedure cb_mtbNameChange(Sender: TObject);
@@ -96,6 +97,7 @@ type
       State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure B_DeleteNonExistClick(Sender: TObject);
     procedure CB_LogLevelChange(Sender: TObject);
+    procedure B_ClearLogClick(Sender: TObject);
   private
 
   public
@@ -310,6 +312,11 @@ end;
 
 // vyresetovat konfiguraci vsech modulu, ktere nebyly nalezeny
 // to je dobre napriklad pri prechodu na jine kolejiste
+procedure TFormConfig.B_ClearLogClick(Sender: TObject);
+begin
+ Self.LV_Log.Clear();
+end;
+
 procedure TFormConfig.B_DeleteNonExistClick(Sender: TObject);
 var i, j:Integer;
 begin
