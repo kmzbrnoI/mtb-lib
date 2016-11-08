@@ -232,7 +232,6 @@ type
     FSpeed: TMtbSpeed;
     FScanInterval: TTimerInterval;
     FMyDir : String;
-    FDataDir : String;  // adresar pro data a cfg
     FOpenned: boolean;
     FScanning: boolean;
     FusbName: String;
@@ -409,8 +408,6 @@ type
     property CmdCount : word read FCmdCount;
     property HWVersion: string read FHWVersion;
     property HWVersionInt: Integer read FHWVersionInt;
-
-    property DataDir:string read FDataDir write FDataDir;
 
     property InputChanged : boolean read FInputChanged;
     property PotChanged: boolean read FPotChanged;
@@ -1878,7 +1875,7 @@ begin
   end;
 end;
 
-constructor TMTBusb.Create(AOwner: TComponent;MyDir:string);
+constructor TMTBusb.Create(AOwner: TComponent; MyDir:string);
 begin
   inherited Create(AOwner);
 
@@ -1898,12 +1895,8 @@ begin
   FTimer.SetSubComponent(True);
 
   FMyDir := MyDir;
-  FDataDir := MyDir + '\data';
-
   CreateDir(MyDir);
-  CreateDir(FDataDir);
-
-  Self.LoadConfig(FDataDir+'/'+_CONFIG_FN);
+  Self.LoadConfig(FMyDir+'/'+_CONFIG_FN);
 end;
 
 destructor TMTBusb.Destroy;
@@ -1914,7 +1907,7 @@ begin
   end;
   if (FOpenned) then Self.Close();
 
-  Self.SaveConfig(FDataDir+'\'+_CONFIG_FN);
+  Self.SaveConfig(FMyDir+'\'+_CONFIG_FN);
 
   inherited;
 end;
