@@ -22,8 +22,7 @@
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
-  limitations under the License.
-}
+  limitations under the License.                                }
 
 { DESCRIPTON:
     - This library works as a middleman between MTB-USB module and
@@ -71,7 +70,8 @@ uses
   MTBusb in 'MTBusb.pas',
   LibraryEvents in 'LibraryEvents.pas',
   Errors in 'Errors.pas',
-  LibCML in 'LibCML.pas';
+  LibCML in 'LibCML.pas',
+  Version in 'Version.pas';
 
 {$R *.res}
 
@@ -452,7 +452,7 @@ end;
 procedure GetDriverVersion(version:PChar; versionLen:Cardinal); stdcall;
 begin
  try
-   StrPLCopy(version, SW_VERSION, versionLen);
+   StrPLCopy(version, GetLibVersion(), versionLen);
  finally
 
  end;

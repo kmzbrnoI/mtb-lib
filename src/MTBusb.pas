@@ -39,11 +39,11 @@ unit MTBusb;
 interface
 
 uses
-  Windows, SysUtils, Classes, IniFiles, ExtCtrls, Forms, math, MTBD2XXUnit;
+  Windows, SysUtils, Classes, IniFiles, ExtCtrls, Forms, math, MTBD2XXUnit,
+  Version;
 
 // Verze komponenty
 const
-  SW_VERSION : string = 'h0.12.0.0';
   MIN_FW_VERSION: Integer = 920;
 
 // verze pro FW 0.9.6 a vyšší
@@ -255,7 +255,6 @@ type
     FHWVersion_Minor: byte;
     FHWVersion_Release: byte;
     FHWVersionInt : Integer;  // verze FW ve tvaru int, bez teèek
-    FDriverVersion: string;
 
     FCmdCount: word;      // pocet cmd/sec
     FCmdCountCounter: word;  // citac 1 sec v timeru
@@ -295,8 +294,6 @@ type
     procedure MtbScan(Sender: TObject);
     procedure LogWrite(ll:TLogLevel; msg:string);
     procedure WriteError(errValue: word; errAddr: byte);
-
-    function GetDriverVersion: string;
 
     procedure GetCmdNum;
 
@@ -410,7 +407,6 @@ type
 
     property CmdCounter_flag: boolean read FCmdCounter_flag;
     property CmdCount : word read FCmdCount;
-    property DriverVersion: string read FDriverVersion;
     property HWVersion: string read FHWVersion;
     property HWVersionInt: Integer read FHWVersionInt;
 
@@ -467,12 +463,6 @@ uses Variants, Errors;
 procedure Register;
 begin
   RegisterComponents('MTB', [TMTBusb]);
-end;
-
-// verze Driveru
-function TMTBusb.GetDriverVersion: string;
-begin
-  Result := SW_VERSION;
 end;
 
 function TMTBusb.GetPotValue(chann: TPotChann): TPot;
@@ -1753,7 +1743,7 @@ begin
     Write_USB_Device_Buffer(1);
 
     LogWrite(llCmd, 'Otevøeno zaøízení ' + UsbSerial);
-    LogWrite(llCmd, 'Driver v' + GetDriverVersion);
+    LogWrite(llCmd, 'Library v' + Version.GetLibVersion());
   except
    on E:Exception do begin
      Self.LogWrite(llError, 'Open exception, closing: '+E.ClassName+' - '+E.Message);
@@ -1813,6 +1803,7 @@ begin
     LogDataOut(2);
     Write_USB_Device_Buffer(2); // Reset XRAM
 
+    // send configuration to modules
     for i := 1 to _MTB_MAX_ADDR do begin
       if (FModule[i].available) then begin
         FT_Out_Buffer[0] := _MTB_SET + 7;
@@ -1892,7 +1883,6 @@ begin
   inherited Create(AOwner);
 
   // Default hodnoty
-  FDriverVersion := GetDriverVersion;
   FLogLevel := logLevel;
 
   FOpenned := false;

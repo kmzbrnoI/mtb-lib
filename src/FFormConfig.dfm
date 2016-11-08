@@ -30,7 +30,6 @@ object FormConfig: TFormConfig
     ActivePage = TS_Device
     Align = alClient
     TabOrder = 0
-    ExplicitHeight = 388
     object TS_Device: TTabSheet
       Margins.Left = 2
       Margins.Top = 2
@@ -38,7 +37,6 @@ object FormConfig: TFormConfig
       Margins.Bottom = 2
       Caption = 'P'#345'ipojen'#237
       ImageIndex = 1
-      ExplicitHeight = 360
       object l_2: TLabel
         Left = 13
         Top = 62
@@ -149,6 +147,9 @@ object FormConfig: TFormConfig
       Margins.Right = 2
       Margins.Bottom = 2
       Caption = 'Stav p'#345'ipojen'#237
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 360
       object Label1: TLabel
         Left = 15
@@ -216,6 +217,9 @@ object FormConfig: TFormConfig
       Margins.Bottom = 2
       Caption = 'MTB moduly'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 360
       object l_3: TLabel
         Left = 10
@@ -279,6 +283,9 @@ object FormConfig: TFormConfig
       Margins.Bottom = 2
       Caption = 'Log'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 360
       object LV_Log: TListView
         Left = 0

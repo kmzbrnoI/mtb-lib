@@ -63,6 +63,7 @@
 			<DCCReference Include="LibraryEvents.pas"/>
 			<DCCReference Include="Errors.pas"/>
 			<DCCReference Include="LibCML.pas"/>
+			<DCCReference Include="Version.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
