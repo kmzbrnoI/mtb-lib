@@ -219,6 +219,7 @@ type
     available: boolean;
     failure : Boolean;        // vypadek modulu - porucha - neodpovida
     revived : Boolean;        // modul oziven po vypadku - zacal odpovidat
+    inputStateKnown : Boolean;
   end;
 
   TNotifyEventError = procedure (Sender: TObject; errValue: word; errAddr: byte) of object;
@@ -313,6 +314,7 @@ type
     function GetRegOverValue(Port: TRegChann): TPortRegOver;
 
     function GetModuleStatus(addr :TAddr): byte;
+    procedure ResetPortsStatus();
 
     procedure LogDataOut(bufLen:Integer);
     procedure LogDataIn(bufLen:Integer; bufStart:Integer = 0);
@@ -1156,8 +1158,6 @@ begin
 
     // open
     if (FScan_flag) then begin
-      //Get_USB_Device_QueueStatus; TODO: check this works fine (Get_USB_Device_QueueStatus already done few lines above)
-      //FDataInputErr := false;
       while (FT_Q_Bytes>=8) do begin
         Read_USB_Device_Buffer(8);
         if FT_In_Buffer[7] = _END_BYTE then begin
@@ -1166,7 +1166,7 @@ begin
 
           case (FT_In_Buffer[0]) and $F0 of
             _MTB_ID: begin
-              Inc(FModuleCount);                    // tady Integer overflow
+              Inc(FModuleCount);
               adresa := FT_In_Buffer[1];
               FModule[adresa].ID := FT_In_Buffer[2];
               FModule[adresa].firmware := IntToHex(FT_In_Buffer[3],2);
@@ -1320,6 +1320,7 @@ begin
                     // moduly I/O
                     idMTB_UNI_ID,idMTB_TTL_ID: begin
                       inDataOld1 := FModule[adresa].Input.value;
+                      FModule[adresa].inputStateKnown := true;
                       inDataNew1 := FT_In_Buffer[i*8+2] OR FT_In_Buffer[i*8+3] * $100;
                       if inDataNew1 <> inDataOld1 then begin
                         FModule[adresa].Input.changed := true;
@@ -1598,8 +1599,6 @@ begin
                 if (Assigned(OnOutputChange)) then OnOutputChange(Self, i);
               end;
             end;
-          { Sem doplnit odelsáni dat na modul
-            s adresou "i"                     }
           end;
         end;
       end;
@@ -1655,10 +1654,8 @@ begin
       FInputChanged := false;
       for i := 1 to _MTB_MAX_ADDR do begin
         if IsModule(i) then begin
-          //LogWrite('Is modul' + IntToStr(i));
           if (FModule[i].Input.changed) then begin
             changed := true;
-            //LogWrite('Changed is true 1');
             Case FModule[i].typ of
               idMTB_UNI_ID,idMTB_TTL_ID : FInputChanged := True;              // Nastavi pri zmene na vstupech I/O
               idMTB_POT_ID              : FPotChanged   := True;              // Nastavi pri zmene POT
@@ -1797,7 +1794,7 @@ end;
 // spusti komunikaci
 procedure TMTBusb.Start();
 var
-  i, j: word;
+  i: word;
 begin
   if (not FOpenned) then raise ENotOpened.Create('Device not opened, cannot start!');
   if (FScanning) then raise EAlreadyStarted.Create('Scanning already started!');
@@ -1808,46 +1805,8 @@ begin
 
   try
     Purge_USB_Device_Out; // vyprazdnit FIFO out
-    // Nulovat vstupy, vystupy?
-    for i := 1 to _MTB_MAX_ADDR do begin
-      FModule[i].revived := False;
-      FModule[i].failure := False;
 
-      FModule[i].Input.value := 0;
-      FModule[i].Input.changed := False;
-      FModule[i].Output.value := 0;
-      FModule[i].Output.changed := False;
-      for j := 0 to 7 do begin
-        FModule[i].Scom.ScomCode[j] := 0;
-        FModule[i].Scom.changed[j] := False;
-        FModule[i].Scom.ScomActive[j] := False;
-      end;
-      if FModule[i].CFData[0] and $1 = 1 then begin
-        FModule[i].Scom.ScomActive[0] := True;
-        FModule[i].Scom.ScomActive[1] := True;
-      end;
-      if FModule[i].CFData[0] and $2 = 2 then begin
-        FModule[i].Scom.ScomActive[2] := True;
-        FModule[i].Scom.ScomActive[3] := True;
-      end;
-      if FModule[i].CFData[0] and $4 = 4 then begin
-        FModule[i].Scom.ScomActive[4] := True;
-        FModule[i].Scom.ScomActive[5] := True;
-      end;
-      if FModule[i].CFData[0] and $8 = 8 then begin
-        FModule[i].Scom.ScomActive[6] := True;
-        FModule[i].Scom.ScomActive[7] := True;
-      end;
-    end;
-    for i := 0 to _PORT_MAX_NUM do begin
-      FPortIn[i].value := False;
-      FPortIn[i].inUp := False;
-      FPortIn[i].inDn := False;
-    end;
-    for i := 0 to _POT_CHANN-1 do begin
-      FPot[i].PotValue := 0;
-      FPot[i].PotDirect := 0;
-    end;
+    Self.ResetPortsStatus();
 
     FT_Out_Buffer[0] := _MTB_SET + 1;
     FT_Out_Buffer[1] := 0;
@@ -1906,6 +1865,8 @@ begin
   if (Assigned(BeforeStop)) then BeforeStop(Self);
 
   try
+    Self.ResetPortsStatus();
+
     FT_Out_Buffer[0] := _COM_OFF;                  // zastavení skenování
     LogDataOut(1);
     Write_USB_Device_Buffer(1);
@@ -2040,6 +2001,53 @@ begin
  ini.WriteInteger('MTB', 'LogLevel', Integer(Self.FLogLevel));
  ini.UpdateFile;
  ini.Free;
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+
+procedure TMTBusb.ResetPortsStatus();
+var i, j:Integer;
+begin
+  for i := 1 to _MTB_MAX_ADDR do begin
+    FModule[i].revived := False;
+    FModule[i].failure := False;
+
+    FModule[i].inputStateKnown := false;
+    FModule[i].Input.value := 0;
+    FModule[i].Input.changed := False;
+    FModule[i].Output.value := 0;
+    FModule[i].Output.changed := False;
+    for j := 0 to 7 do begin
+      FModule[i].Scom.ScomCode[j] := 0;
+      FModule[i].Scom.changed[j] := False;
+      FModule[i].Scom.ScomActive[j] := False;
+    end;
+    if FModule[i].CFData[0] and $1 = 1 then begin
+      FModule[i].Scom.ScomActive[0] := True;
+      FModule[i].Scom.ScomActive[1] := True;
+    end;
+    if FModule[i].CFData[0] and $2 = 2 then begin
+      FModule[i].Scom.ScomActive[2] := True;
+      FModule[i].Scom.ScomActive[3] := True;
+    end;
+    if FModule[i].CFData[0] and $4 = 4 then begin
+      FModule[i].Scom.ScomActive[4] := True;
+      FModule[i].Scom.ScomActive[5] := True;
+    end;
+    if FModule[i].CFData[0] and $8 = 8 then begin
+      FModule[i].Scom.ScomActive[6] := True;
+      FModule[i].Scom.ScomActive[7] := True;
+    end;
+  end;
+  for i := 0 to _PORT_MAX_NUM do begin
+    FPortIn[i].value := False;
+    FPortIn[i].inUp := False;
+    FPortIn[i].inDn := False;
+  end;
+  for i := 0 to _POT_CHANN-1 do begin
+    FPot[i].PotValue := 0;
+    FPot[i].PotDirect := 0;
+  end;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
