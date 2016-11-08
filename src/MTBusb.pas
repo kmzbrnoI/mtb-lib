@@ -451,16 +451,9 @@ type
 
   end;
 
-procedure Register;
-
 implementation
 
 uses Variants, Errors;
-
-procedure Register;
-begin
-  RegisterComponents('MTB', [TMTBusb]);
-end;
 
 function TMTBusb.GetPotValue(chann: TPotChann): TPot;
 begin
@@ -774,9 +767,9 @@ var
   X: word;
   Port : word;
 begin
-    Port := addr*16+channel;
-    X := Round(Power(2,Port MOD 16));
-    Result := (X = (FModule[Port DIV 16].Input.value AND X));
+  Port := addr*16+channel;
+  X := Round(Power(2,Port MOD 16));
+  Result := (X = (FModule[Port DIV 16].Input.value AND X));
 end;
 
 // nastavi out adresu a channel na hodnotu
@@ -802,17 +795,17 @@ end;
 function TMTBusb.GetInPort(Port: TPortValue): boolean;
 var X: word;
 begin
-    X := Round(Power(2,Port MOD 16));
-    //Result := (X = (FModule[Port DIV 16].Input.value AND X));
-    if (X = (FModule[Port DIV 16].Input.value AND X)) then Result := true else Result :=false;
+  X := Round(Power(2,Port MOD 16));
+  //Result := (X = (FModule[Port DIV 16].Input.value AND X));
+  if (X = (FModule[Port DIV 16].Input.value AND X)) then Result := true else Result :=false;
 end;
 
 // ziska stav vystupu daneho out portu
 function TMTBusb.GetOutPort(Port: TPortValue): boolean;
 var X: word;
 begin
-    X := Round(Power(2,Port MOD 16));
-    if (X = (FModule[Port DIV 16].Output.value AND X)) then Result := true else Result :=false;
+  X := Round(Power(2,Port MOD 16));
+  if (X = (FModule[Port DIV 16].Output.value AND X)) then Result := true else Result :=false;
 end;
 
 // Vrati True, pokud prave prisel signal na vstup
@@ -1901,13 +1894,18 @@ end;
 
 destructor TMTBusb.Destroy;
 begin
-  if (FScanning and FOpenned) then begin
-    FT_Out_Buffer[0] := _COM_OFF;                  // zastavení skenování
-    Write_USB_Device_Buffer(1);
-  end;
-  if (FOpenned) then Self.Close();
+  try
+    if (FScanning and FOpenned) then Self.Stop();
+    if (FOpenned) then Self.Close();
+  except
 
-  Self.SaveConfig(FMyDir+'\'+_CONFIG_FN);
+  end;
+
+  try
+    Self.SaveConfig(FMyDir+'\'+_CONFIG_FN);
+  except
+
+  end;
 
   inherited;
 end;
