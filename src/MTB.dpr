@@ -200,7 +200,7 @@ begin
   end;
 end;
 
-function Openned():Boolean; stdcall;
+function Opened():Boolean; stdcall;
 begin
  try
    Result := MTBdrv.Openned;
@@ -546,7 +546,7 @@ exports
   LoadConfig, SaveConfig,
   SetLogLevel, GetLogLevel,
   ShowConfigDialog, HideConfigDialog,
-  Open, OpenDevice, Close, Openned, Start, Stop, Started,
+  Open, OpenDevice, Close, Opened, Start, Stop, Started,
   GetInput, GetOutput, SetOutput,
   GetDeviceCount, GetDeviceSerial,
   IsModule, IsModuleFailure, GetModuleCount, GetModuleType, GetModuleName, GetModuleFW,
