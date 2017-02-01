@@ -269,6 +269,8 @@ type
 
     FLogLevel : TLogLevel;
 
+    FWaitingOnScan : boolean;
+
     FErrAddress: byte;
     FBeforeOpen,
     FAfterOpen,
@@ -277,7 +279,8 @@ type
     FAfterStart,
     FBeforeStop,
     FAfterStop,
-    FAfterClose : TNotifyEvent;
+    FAfterClose,
+    FOnScanned : TNotifyEvent;
     FOnError : TNotifyEventError;
     FOnLog : TNotifyEventLog;
     FOnScan : TNotifyEvent;
@@ -348,6 +351,8 @@ type
     function IsModuleConfigured(addr: TAddr): boolean;  // modul ma konfiguracni data
     function IsModuleRevived(addr: TAddr): boolean;     // modul oziven po vypadku
     function IsModuleFailure(addr: TAddr): boolean;     // modul v poruse
+    function IsModuleScanned(addr: TAddr): boolean;
+    function AreAllModulesScanned(): boolean;
 
     function GetModuleInfo(addr: TAddr): TModule; // informace o modulu
     function GetModuleType(addr: TAddr): TModulType; // Typ modulu
@@ -397,6 +402,8 @@ type
 
     procedure LoadConfig(fn:string);
     procedure SaveConfig(fn:string);
+
+    procedure CheckAllScannedEvent();
 
     property ModuleCount: byte read FModuleCount;
     property Openned: boolean read FOpenned;
@@ -448,6 +455,7 @@ type
     property AfterStart : TNotifyEvent read FAfterStart write FAfterStart;
     property BeforeStop : TNotifyEvent read FBeforeStop write FBeforeStop;
     property AfterStop : TNotifyEvent read FAfterStop write FAfterStop;
+    property OnScanned : TNotifyEvent read FOnScanned write FOnScanned;
 
   end;
 
@@ -886,6 +894,14 @@ begin
   end;
 end;
 
+function TMTBusb.IsModuleScanned(addr: TAddr): boolean;
+begin
+  Result := False;
+  if IsModule(addr) then begin
+    Result := FModule[addr].inputStateKnown;
+  end;
+end;
+
 // vrati, zda out port existuje
 function TMTBusb.GetExistsOutPort(Port: TPortValue): boolean;
 begin
@@ -1301,6 +1317,7 @@ begin
                     idMTB_UNI_ID,idMTB_TTL_ID: begin
                       inDataOld1 := FModule[adresa].Input.value;
                       FModule[adresa].inputStateKnown := true;
+                      Self.CheckAllScannedEvent();
                       inDataNew1 := FT_In_Buffer[i*8+2] OR FT_In_Buffer[i*8+3] * $100;
                       if inDataNew1 <> inDataOld1 then begin
                         FModule[adresa].Input.changed := true;
@@ -1406,6 +1423,7 @@ begin
                     FModule[FErrAddress].revived := False;
                     FModule[FErrAddress].failure := True;
                     FModule[FErrAddress].Status := 0;
+                    FModule[FErrAddress].inputStateKnown := false;
 
                     // nastaveni null hodnot do mudulu, ktere jsou v poruse
                     adresa := FErrAddress;
@@ -1821,6 +1839,7 @@ begin
     Write_USB_Device_Buffer(1);
 
     FScanning := true;
+    FWaitingOnScan := true;
     LogWrite(llChange, 'Spuštìní komunikace');
     LogWrite(llChange, 'Speed: '+ IntToStr(GetSpeedStr)+'bd     ScanInterval: ' + IntToStr(ord(ScanInterval)));
     GetCmdNum;
@@ -1853,6 +1872,7 @@ begin
     Write_USB_Device_Buffer(1);
 
     FScanning := false;
+    FWaitingOnScan := false;
     LogWrite(llChange, 'Zastavení komunikace');
     for i := 1 to _MTB_MAX_ADDR do begin
       FModule[i].Status := 0;
@@ -1877,6 +1897,7 @@ begin
 
   FOpenned := false;
   FScanning := false;
+  FWaitingOnScan := false;
   FModuleCount := 0;
   FCmdSecCycleNum := 10;
   FCyclesFbData := 0;
@@ -2029,6 +2050,30 @@ begin
     FPot[i].PotValue := 0;
     FPot[i].PotDirect := 0;
   end;
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+
+function TMTBusb.AreAllModulesScanned(): boolean;
+var i:Integer;
+begin
+  for i := 1 to _MTB_MAX_ADDR do begin
+    if ((IsModule(i)) and (not IsModuleFailure(i)) and
+        ((not IsModuleConfigured(i)) or (not IsModuleScanned(i)))) then
+     Exit(false);
+  end;
+
+ Result := true;
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+
+procedure TMTBusb.CheckAllScannedEvent();
+begin
+ if ((Self.FWaitingOnScan) and (AreAllModulesScanned())) then begin
+   Self.FWaitingOnScan := false;
+   if (Assigned(Self.FOnScanned)) then Self.FOnScanned(Self);
+ end;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////

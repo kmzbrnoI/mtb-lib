@@ -533,6 +533,12 @@ begin
  LibEvents.OnOutputChanged.event := event;
 end;
 
+procedure BindOnScanned(event:TStdNotifyEvent; data:Pointer); stdcall;
+begin
+ LibEvents.OnScanned.data  := data;
+ LibEvents.OnScanned.event := event;
+end;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Dll exported functions:
 
@@ -547,11 +553,12 @@ exports
   GetDeviceVersion, GetDriverVersion,
   BindBeforeOpen, BindAfterOpen, BindBeforeClose, BindAfterClose,
   BindBeforeStart, BindAfterStart, BindBeforeStop, BindAfterStop,
-  BindOnError, BindOnLog, BindOnInputChanged, BindOnOutputChanged;
+  BindOnError, BindOnLog, BindOnInputChanged, BindOnOutputChanged,
+  BindOnScanned;
 
 
 begin
   Application.CreateForm(TFormConfig, FormConfig);
   Application.CreateForm(TFormModule, FormModule);
-  end.
+end.
 

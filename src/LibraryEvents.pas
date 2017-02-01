@@ -68,6 +68,8 @@ type
     BeforeStop:TMyNotifyEvent;
     AfterStop:TMyNotifyEvent;
 
+    OnScanned:TMyNotifyEvent;
+
     OnError:TMyErrorEvent;
     OnLog:TMyLogEvent;
     OnInputChanged:TMyModuleChangeEvent;

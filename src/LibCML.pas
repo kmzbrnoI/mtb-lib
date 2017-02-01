@@ -53,6 +53,8 @@ type
       procedure MTBBeforeStop(Sender:TObject);
       procedure MTBAfterStop(Sender:TObject);
 
+      procedure MTBOnScanned(Sender:TObject);
+
     public
       constructor Create();
       destructor Destroy(); override;
@@ -93,6 +95,8 @@ begin
 
  MTBdrv.BeforeClose     := Self.MTBBeforeClose;
  MTBdrv.AfterClose      := Self.MTBAfterClose;
+
+ MTBdrv.OnScanned       := Self.MTBOnScanned;
 end;
 
 destructor TCML.Destroy();
@@ -178,6 +182,11 @@ end;
 procedure TCML.MTBOnOutputChanged(Sender: TObject; module: byte);
 begin
  if (Assigned(LibEvents.OnOutputChanged.event)) then LibEvents.OnOutputChanged.event(Self, LibEvents.OnOutputChanged.data, module);
+end;
+
+procedure TCML.MTBOnScanned(Sender:TObject);
+begin
+ if (Assigned(LibEvents.OnScanned.event)) then LibEvents.OnScanned.event(Self, LibEvents.OnScanned.data);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
