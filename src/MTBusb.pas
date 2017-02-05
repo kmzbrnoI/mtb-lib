@@ -1703,7 +1703,6 @@ var
   i: word;
 begin
   if ((FOpenned) or (FScan_flag)) then raise EAlreadyOpened.Create('MTB already opened');
-  if (FScanning) then raise EAlreadyStarted.Create('MTB already started');
 
   LogWrite(llCmd, 'Otevírám zaøízení ' + UsbSerial);
   if Assigned(BeforeOpen) then BeforeOpen(Self);
