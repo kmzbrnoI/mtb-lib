@@ -64,6 +64,7 @@ uses
   Windows,
   Forms,
   Classes,
+  IniFiles,
   FFormConfig in 'FFormConfig.pas' {FormConfig},
   MTBD2XXUnit in 'MTBD2XXUnit.pas',
   FFormModule in 'FFormModule.pas' {FormModule},
@@ -85,7 +86,10 @@ begin
   MTBdrv.LoadConfig(filename);
   Result := 0;
  except
-  Result := MTB_GENERAL_EXCEPTION;
+  on E:EIniFileException do
+    Result := MTB_FILE_CANNOT_ACCESS;
+  on E:Exception do
+    Result := MTB_GENERAL_EXCEPTION;
  end;
 end;
 
@@ -95,7 +99,10 @@ begin
   MTBdrv.SaveConfig(filename);
   Result := 0;
  except
-  Result := MTB_GENERAL_EXCEPTION;
+  on E:EIniFileException do
+    Result := MTB_FILE_CANNOT_ACCESS;
+  on E:Exception do
+    Result := MTB_GENERAL_EXCEPTION;
  end;
 end;
 
@@ -154,8 +161,6 @@ begin
   except
     on E:EAlreadyOpened do
       Result := MTB_ALREADY_OPENNED;
-    on E:EAlreadyStarted do
-      Result := MTB_ALREADY_STARTED;
     on E:ECannotOpenPort do
       Result := MTB_CANNOT_OPEN_PORT;
     on E:EFtGeneral do
@@ -163,6 +168,13 @@ begin
     on E:Exception do
       Result := MTB_GENERAL_EXCEPTION;
    end;
+
+  try
+    if (Result <> 0) then
+      FormConfig.AfterClose(nil);
+  finally
+
+  end;
 end;
 
 function OpenDevice(device:PChar; persist:boolean):Integer; stdcall;
@@ -173,14 +185,19 @@ begin
   except
     on E:EAlreadyOpened do
       Result := MTB_ALREADY_OPENNED;
-    on E:EAlreadyStarted do
-      Result := MTB_ALREADY_STARTED;
     on E:ECannotOpenPort do
       Result := MTB_CANNOT_OPEN_PORT;
     on E:EFtGeneral do
       Result := MTB_FT_EXCEPTION;
     on E:Exception do
       Result := MTB_GENERAL_EXCEPTION;
+  end;
+
+  try
+    if (Result <> 0) then
+      FormConfig.AfterClose(nil);
+  finally
+
   end;
 end;
 
@@ -225,6 +242,13 @@ begin
       Result := MTB_FT_EXCEPTION;
     on E:Exception do
       Result := MTB_GENERAL_EXCEPTION;
+  end;
+
+  try
+    if (Result <> 0) then
+      FormConfig.AfterStop(nil);
+  finally
+
   end;
 end;
 
@@ -417,7 +441,7 @@ function GetModuleName(module:Cardinal; name:PChar; nameLen:Cardinal):Integer; s
 begin
  try
    if (not InRange(module, Low(TAddr), High(TAddr))) then Exit(MTB_MODULE_INVALID_ADDR);
-   StrPLCopy(name, MTBdrv.GetModuleInfo(module).name, nameLen);
+   StrPLCopy(name, MTBdrv.GetModuleInfo(module).popis, nameLen);
    Result := 0;
  except
    Result := MTB_GENERAL_EXCEPTION;

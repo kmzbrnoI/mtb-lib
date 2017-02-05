@@ -1919,7 +1919,13 @@ begin
 
   FMyDir := MyDir;
   CreateDir(MyDir);
-  Self.LoadConfig(FMyDir+'/'+_CONFIG_FN);
+
+  try
+    Self.LoadConfig(FMyDir+'/'+_CONFIG_FN);
+  except
+    on E:Exception do
+      Self.LogWrite(llError, 'Nelze naèíst konfiguraci : ' + E.Message);
+  end;
 end;
 
 destructor TMTBusb.Destroy;
@@ -1934,7 +1940,8 @@ begin
   try
     Self.SaveConfig(FMyDir+'\'+_CONFIG_FN);
   except
-
+    on E:Exception do
+      Self.LogWrite(llError, 'Nelze uložit konfiguraci : ' + E.Message);
   end;
 
   inherited;
@@ -1967,11 +1974,7 @@ var ini:TMemIniFile;
     i:Integer;
     name:string;
 begin
- try
-   ini := TMemIniFile.Create(fn);
- except
-   Exit();
- end;
+ ini := TMemIniFile.Create(fn);
 
  for i := 1 to _MTB_MAX_ADDR do
  begin
@@ -1992,11 +1995,7 @@ var ini:TMemIniFile;
     i:Integer;
     name:string;
 begin
- try
-  ini := TMemIniFile.Create(fn);
- except
-  Exit();
- end;
+ ini := TMemIniFile.Create(fn);
 
  for i := 1 to _MTB_MAX_ADDR do
  begin
