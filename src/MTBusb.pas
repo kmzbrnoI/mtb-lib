@@ -1762,6 +1762,7 @@ end;
 
 // uzavre zarizeni
 procedure TMTBusb.Close();
+var i:Integer;
 begin
  try
   if Assigned(BeforeClose) then BeforeClose(Self);
@@ -1779,6 +1780,15 @@ begin
   FTimer.Enabled := false;
   FOpenned := false;
   LogWrite(llCmd, 'Uzavøení zaøízení');
+
+  for i:= 1 to _MTB_MAX_ADDR do begin
+    FModule[i].CFGnum := 0;
+    FModule[i].ID := 0;
+    FModule[i].typ := idNone;
+    FModule[i].available := false;
+    FModule[i].firmware := '';
+  end;
+
   if Assigned(AfterClose) then AfterClose(Self);
  except
    on E:Exception do begin
