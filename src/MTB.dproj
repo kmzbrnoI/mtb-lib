@@ -25,7 +25,6 @@
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_Platform>x86</DCC_Platform>
 			<DCC_BplOutput>..\Outunit\</DCC_BplOutput>
-			<DCC_RemoteDebug>true</DCC_RemoteDebug>
 			<DCC_RangeChecking>true</DCC_RangeChecking>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_UsePackage>vcl;rtl;vclx;DelphiX_for7;VclSmp;vclactnband;CPortLib7;Custom;DLPortIO;Intellibox;Mtbp;Package1;vclshlctrls;delphivclide;direct</DCC_UsePackage>
@@ -46,6 +45,7 @@
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_RemoteDebug>true</DCC_RemoteDebug>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<ItemGroup>
