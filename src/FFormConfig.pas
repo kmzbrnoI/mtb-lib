@@ -344,7 +344,6 @@ procedure TFormConfig.AfterStop(Sender:TObject);
 begin
  Self.L_Started.Caption      := 'zastavena';
  Self.L_Started.Font.Color   := clRed;
- if (Assigned(LibEvents.AfterStop.event)) then LibEvents.AfterStop.event(Self, LibEvents.AfterStop.data);
 end;
 
 procedure TFormConfig.OnLog(Sender: TObject; logLevel:TLogLevel; logValue: string);
