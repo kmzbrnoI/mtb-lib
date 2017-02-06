@@ -1974,7 +1974,7 @@ var ini:TMemIniFile;
     i:Integer;
     name:string;
 begin
- ini := TMemIniFile.Create(fn);
+ ini := TMemIniFile.Create(fn, TEncoding.UTF8);
 
  for i := 1 to _MTB_MAX_ADDR do
  begin
@@ -1995,7 +1995,7 @@ var ini:TMemIniFile;
     i:Integer;
     name:string;
 begin
- ini := TMemIniFile.Create(fn);
+ ini := TMemIniFile.Create(fn, TEncoding.UTF8);
 
  for i := 1 to _MTB_MAX_ADDR do
  begin
