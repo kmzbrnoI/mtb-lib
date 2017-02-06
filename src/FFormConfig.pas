@@ -69,6 +69,7 @@ type
     CB_LogLevel: TComboBox;
     lv_modules: TListView;
     B_ClearLog: TButton;
+    CHB_ShowAllModules: TCheckBox;
     procedure b_ScanBrdClick(Sender: TObject);
     procedure lv_modulesDblClick(Sender: TObject);
     procedure cb_mtbNameChange(Sender: TObject);
@@ -79,7 +80,6 @@ type
     procedure pm_modPopup(Sender: TObject);
     procedure cb_speedChange(Sender: TObject);//cteni verze z nastaveni
 
-    procedure OnScanned(Sender:TObject);
     procedure OnError(Sender: TObject; errValue: word; errAddr: byte);
 
     procedure BeforeOpen(Sender:TObject);
@@ -98,9 +98,12 @@ type
     procedure B_DeleteNonExistClick(Sender: TObject);
     procedure CB_LogLevelChange(Sender: TObject);
     procedure B_ClearLogClick(Sender: TObject);
+    procedure CHB_ShowAllModulesClick(Sender: TObject);
   private
 
   public
+
+    procedure UpdateModulesList();
 
   end;
 
@@ -142,31 +145,6 @@ begin
  MTBdrv.LogLevel := TLogLevel(Self.CB_LogLevel.ItemIndex);
 end;
 
-procedure TFormConfig.OnScanned(Sender:TObject);
-var
-  i: Integer;
-  LI: TListItem;
-  cfg:TModulConfigGet;
-begin
- lv_modules.Color := clWindow;
- lv_modules.Clear;
- l_modcount.Caption := IntToStr(MTBdrv.ModuleCount);
- TS_Device.Enabled := true;
-
- for i := 0 to _MTB_MAX_ADDR do
-  begin
-   if (not MTBdrv.IsModule(i)) then continue;
-
-   LI := lv_modules.Items.Add;
-   cfg := MTBdrv.GetModuleCfg(i);
-   LI.Caption := cfg.CFGpopis;
-
-   LI.SubItems.Add(IntToStr(i));
-   LI.SubItems.Add(MTBdrv.GetModuleTypeName(i));
-   LI.SubItems.Add(IntToHex(MTBdrv.GetCfg(i), 8));
- end;
-end;
-
 procedure TFormConfig.lv_modulesDblClick(Sender: TObject);
 begin
  if (lv_modules.Selected <> nil) then
@@ -176,6 +154,11 @@ end;
 procedure TFormConfig.cb_speedChange(Sender: TObject);
 begin
  MTBdrv.MtbSpeed := TMtbSpeed(Self.cb_speed.ItemIndex+2);
+end;
+
+procedure TFormConfig.CHB_ShowAllModulesClick(Sender: TObject);
+begin
+ Self.UpdateModulesList();
 end;
 
 procedure TFormConfig.cb_mtbNameChange(Sender: TObject);
@@ -275,7 +258,7 @@ procedure TFormConfig.AfterOpen(Sender:TObject);
 begin
  Self.L_Openned.Caption := 'otevøeno';
  Self.L_Openned.Font.Color := clGreen;
- Self.OnScanned(Self);
+ Self.UpdateModulesList();
 end;
 
 procedure TFormConfig.BeforeClose(Sender:TObject);
@@ -286,9 +269,8 @@ end;
 
 procedure TFormConfig.AfterClose(Sender:TObject);
 begin
- Self.l_modcount.Caption := '?';
- Self.lv_modules.Color := $EDEDED;
- Self.lv_modules.Clear();
+ Self.UpdateModulesList();
+
  Self.L_Openned.Caption := 'uzavøeno';
  Self.L_Openned.Font.Color := clRed;
  Self.cb_speed.Enabled   := true;
@@ -378,6 +360,43 @@ begin
    end;//case
   end;//if errAddr = 255
 end;//procedure
+
+procedure TFormConfig.UpdateModulesList();
+var
+  i: Integer;
+  LI: TListItem;
+  cfg:TModulConfigGet;
+begin
+ if (MTBdrv.Openned) then
+   l_modcount.Caption := IntToStr(MTBdrv.ModuleCount)
+ else
+   l_modcount.Caption := '?';
+
+ lv_modules.Clear();
+
+ if ((not MTBdrv.Openned) and (not CHB_ShowAllModules.Checked)) then
+  begin
+   lv_modules.Color := $EDEDED;
+   Exit();
+  end;
+
+ // show modules
+
+ lv_modules.Color := clWindow;
+
+ for i := 0 to _MTB_MAX_ADDR do
+  begin
+   if ((not MTBdrv.IsModule(i)) and (not CHB_ShowAllModules.Checked)) then continue;
+
+   LI := lv_modules.Items.Add;
+   cfg := MTBdrv.GetModuleCfg(i);
+   LI.Caption := cfg.CFGpopis;
+
+   LI.SubItems.Add(IntToStr(i));
+   LI.SubItems.Add(MTBdrv.GetModuleTypeName(i));
+   LI.SubItems.Add(IntToHex(MTBdrv.GetCfg(i), 8));
+ end;
+end;
 
 initialization
 

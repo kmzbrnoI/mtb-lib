@@ -27,7 +27,7 @@ object FormConfig: TFormConfig
     Margins.Top = 2
     Margins.Right = 2
     Margins.Bottom = 2
-    ActivePage = TS_Device
+    ActivePage = TS_Modules
     Align = alClient
     TabOrder = 0
     object TS_Device: TTabSheet
@@ -147,10 +147,6 @@ object FormConfig: TFormConfig
       Margins.Right = 2
       Margins.Bottom = 2
       Caption = 'Stav p'#345'ipojen'#237
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 360
       object Label1: TLabel
         Left = 15
         Top = 13
@@ -217,20 +213,16 @@ object FormConfig: TFormConfig
       Margins.Bottom = 2
       Caption = 'MTB moduly'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 360
       object l_3: TLabel
-        Left = 10
-        Top = 12
+        Left = 7
+        Top = 9
         Width = 68
         Height = 13
         Caption = 'Po'#269'et modul'#367':'
       end
       object l_modcount: TLabel
-        Left = 112
-        Top = 12
+        Left = 109
+        Top = 9
         Width = 6
         Height = 13
         Caption = '?'
@@ -275,6 +267,15 @@ object FormConfig: TFormConfig
         ViewStyle = vsReport
         OnDblClick = lv_modulesDblClick
       end
+      object CHB_ShowAllModules: TCheckBox
+        Left = 7
+        Top = 26
+        Width = 162
+        Height = 17
+        Caption = 'Zobrazit i nenalezen'#233' moduly'
+        TabOrder = 2
+        OnClick = CHB_ShowAllModulesClick
+      end
     end
     object TS_Log: TTabSheet
       Margins.Left = 2
@@ -283,10 +284,6 @@ object FormConfig: TFormConfig
       Margins.Bottom = 2
       Caption = 'Log'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 360
       object LV_Log: TListView
         Left = 0
         Top = 40

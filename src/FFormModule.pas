@@ -274,7 +274,7 @@ begin
   MTBdrv.WrCfgData.CFGpopis := Self.E_nazev_desky.Text;
 
   MTBdrv.SetModuleCfg(OpenModule);
-  FormConfig.OnScanned(nil);
+  FormConfig.UpdateModulesList();
 
   Screen.Cursor := crDefault;
   Self.Close;
