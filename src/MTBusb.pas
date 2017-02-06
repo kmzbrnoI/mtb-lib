@@ -522,46 +522,101 @@ end;
 function TMTBusb.GetErrString(err: word): string;
 begin
     case err of
-      // mtb moduly 101-200
-      101: Result := 'Modul neodpovìdìl na pøíkaz - CMD';
-      102: Result := 'Modul neodpovìdìl na pøíkaz - CMD, poslední pokus';
-      106: Result := 'Chybný SUM pøijatých dat - CMD';
-      107: Result := 'Chybný SUM pøijatých dat - CMD, poslední pokus';
-      108: Result := 'Chybný SUM odeslaných dat - CMD';
-      109: Result := 'Chybný SUM odeslaných dat - CMD, poslední pokus';
+      MTB_GENERAL_EXCEPTION:
+        Result := 'Kritická chyba';
+      MTB_FT_EXCEPTION:
+        Result := 'Výjimka FTdriver';
+      MTB_FILE_CANNOT_ACCESS:
+        Result := 'Nelze pøitoupit k souboru';
+      MTB_FILE_DEVICE_OPENED:
+        Result := 'Zaøízení již otevøeno';
+      MTB_MODULE_INVALID_ADDR:
+        Result := 'Naplatná adresa';
+      MTB_MODULE_FAILED:
+        Result := 'Modul v poruše';
+      MTB_PORT_INVALID_NUMBER:
+        Result := 'Neplatné èíslo portu';
+      MTB_MODULE_UNKNOWN_TYPE:
+        Result := 'Neznámý typ modulu';
+      MTB_INVALID_SPEED:
+        Result := 'Neplatná rychlost';
+      MTB_INVALID_SCOM_CODE:
+        Result := 'Neplatný kód S-SCOM návìsti';
+      MTB_INVALID_MODULES_COUNT:
+        Result := 'Neplatný poèet modulù';
+      MTB_INPUT_NOT_YET_SCANNED:
+        Result := 'Vstupy zatím nenaskenovány';
 
-      121: Result := 'Modul neodpovìdìl na pøíkaz - FB';
-      122: Result := 'Modul neodpovìdìl na pøíkaz - FB, poslední pokus';
-      126: Result := 'Chybný SUM pøijatých dat - FB';
-      127: Result := 'Chybný SUM pøijatých dat - FB, poslední pokus';
-      128: Result := 'Chybný SUM odeslaných dat - FB';
-      129: Result := 'Chybný SUM odeslaných dat - FB, poslední pokus';
+      MTB_INVALID_PACKET:
+        Result := 'Neplatný paket';
+      MTB_MODULE_NOT_ANSWERED_CMD:
+        Result := 'Modul neodpovìdìl na pøíkaz - CMD';
+      MTB_MODULE_NOT_ANSWERED_CMD_GIVING_UP:
+        Result := 'Modul neodpovìdìl na pøíkaz - CMD, poslední pokus';
+      MTB_MODULE_OUT_SUM_ERROR:
+        Result := 'Chybný SUM pøijatých dat - CMD';
+      MTB_MODULE_OUT_SUM_ERROR_GIVING_UP:
+        Result := 'Chybný SUM pøijatých dat - CMD, poslední pokus';
+      MTB_MODULE_IN_SUM_ERROR:
+        Result := 'Chybný SUM odeslaných dat - CMD';
+      MTB_MODULE_IN_SUM_ERROR_GIVING_UP:
+        Result := 'Chybný SUM odeslaných dat - CMD, poslední pokus';
 
-      125: Result := 'Chybný SUM - FB';
-      131: Result := 'Modul neodpovídá - PWR_ON';
-      136: Result := 'Chybný SUM pøijatých dat - POWER ON - konfigurace';
-      137: Result := 'Chybný SUM pøijatých dat - POWER ON - konfigurace, posledni pokus';
-      138: Result := 'Chybný SUM odeslaných dat - POWER ON - konfigurace';
-      139: Result := 'Chybný SUM odeslaných dat - POWER ON - konfigurace, posledni pokus';
+      MTB_MODULE_NOT_RESPONDED_FB:
+        Result := 'Modul neodpovìdìl na pøíkaz - FB';
+      MTB_MODULE_NOT_RESPONDED_FB_GIVING_UP:
+        Result := 'Modul neodpovìdìl na pøíkaz - FB, poslední pokus';
+      MTB_MODULE_IN_FB_SUM_ERROR:
+        Result := 'Chybný SUM pøijatých dat - FB';
+      MTB_MODULE_IN_FB_SUM_ERROR_GIVING_UP:
+        Result := 'Chybný SUM pøijatých dat - FB, poslední pokus';
+      MTB_MODULE_OUT_FB_SUM_ERROR:
+        Result := 'Chybný SUM odeslaných dat - FB';
+      MTB_MODULE_OUT_FB_SUM_ERROR_GIVING_UP:
+        Result := 'Chybný SUM odeslaných dat - FB, poslední pokus';
 
-      141: Result := 'Modul nekomunikuje';
-      142: Result := 'Modul komunikuje';
-      145: Result := 'Chybný SUM - Modul obdržel chybná data';
+      MTB_MODULE_INVALID_FB_SUM:
+        Result := 'Chybný SUM - FB';
+      MTB_MODULE_NOT_RESPONDING_PWR_ON:
+        Result := 'Modul neodpovídá - PWR_ON';
+      MTB_MODULE_PWR_ON_IN_SUM_ERROR:
+        Result := 'Chybný SUM pøijatých dat - POWER ON - konfigurace';
+      MTB_MODULE_PWR_ON_IN_SUM_ERROR_GIVING_UP:
+        Result := 'Chybný SUM pøijatých dat - POWER ON - konfigurace, posledni pokus';
+      MTB_MODULE_PWR_ON_OUT_SUM_ERROR:
+        Result := 'Chybný SUM odeslaných dat - POWER ON - konfigurace';
+      MTB_MODULE_PWR_ON_OUT_SUM_ERROR_GIVING_UP:
+        Result := 'Chybný SUM odeslaných dat - POWER ON - konfigurace, posledni pokus';
 
-      151: Result := 'Nelze spustit komunikaci - neprobìhl scan sbìrnice';
+      MTB_MODULE_FAIL:
+        Result := 'Modul nekomunikuje';
+      MTB_MODULE_RESTORED:
+        Result := 'Modul obnoven';
+      MTB_MODULE_INVALID_DATA:
+        Result := 'Chybný SUM - Modul obdržel chybná data';
 
-      162: Result := 'Chybný SUM pøijatých dat - oživení modulu';
-      163: Result := 'Chybný SUM odeslaných dat - oživení modulu';
+      MTB_MODULE_REWIND_IN_SUM_ERROR:
+        Result := 'Chybný SUM pøijatých dat - oživení modulu';
+      MTB_MODULE_REWIND_OUT_SUM_ERROR:
+        Result := 'Chybný SUM odeslaných dat - oživení modulu';
 
-      166: Result := 'Chybný SUM pøijatých dat - SCAN sbìrnice';
-      167: Result := 'Chybný SUM pøijatých dat - SCAN sbìrnice - posledni pokus';
-      168: Result := 'Chybný SUM odeslaných dat - SCAN sbìrnice';
-      169: Result := 'Chybný SUM odeslaných dat - SCAN sbìrnice - posledni pokus';
+      MTB_MODULE_SCAN_IN_SUM_ERROR:
+        Result := 'Chybný SUM pøijatých dat - SCAN sbìrnice';
+      MTB_MODULE_SCAN_IN_SUM_ERROR_GIVING_UP:
+        Result := 'Chybný SUM pøijatých dat - SCAN sbìrnice - posledni pokus';
+      MTB_MODULE_SCAN_OUT_SUM_ERROR:
+        Result := 'Chybný SUM odeslaných dat - SCAN sbìrnice';
+      MTB_MODULE_SCAN_OUT_SUM_ERROR_GIVING_UP:
+        Result := 'Chybný SUM odeslaných dat - SCAN sbìrnice - posledni pokus';
 
-      176: Result := 'Chybný SUM pøijatých dat - SC konfigurace';
-      177: Result := 'Chybný SUM pøijatých dat - SC konfigurace - posledni pokus';
-      178: Result := 'Chybný SUM odeslaných dat - SC konfigurace';
-      179: Result := 'Chybný SUM odeslaných dat - SC konfigurace - posledni pokus';
+      MTB_MODULE_SC_IN_SUM_ERROR:
+        Result := 'Chybný SUM pøijatých dat - SC konfigurace';
+      MTB_MODULE_SC_IN_SUM_ERROR_GIVING_UP:
+        Result := 'Chybný SUM pøijatých dat - SC konfigurace - posledni pokus';
+      MTB_MODULE_SC_OUT_SUM_ERROR:
+        Result := 'Chybný SUM odeslaných dat - SC konfigurace';
+      MTB_MODULE_SC_OUT_SUM_ERROR_GIVING_UP:
+        Result := 'Chybný SUM odeslaných dat - SC konfigurace - posledni pokus';
 
       else Result := 'Neznámá chyba';
     end;
@@ -1231,7 +1286,7 @@ begin
               FErrAddress := (FT_In_Buffer[1]);
               errId := (FT_In_Buffer[2]);
               Self.WriteError(3000+errId, FErrAddress);
-              Self.LogWrite(llError, 'Chyba '+intToStr(errId)+ ' modulu '+IntToStr(FErrAddress)+': '+Self.GetErrString(errId));
+              Self.LogWrite(llError, 'Chyba '+intToStr(errId)+ ' modulu '+IntToStr(FErrAddress)+': '+Self.GetErrString(3000+errId));
             end;
           end;
           Get_USB_Device_QueueStatus;
@@ -1425,7 +1480,7 @@ begin
                 FErrAddress := (FT_In_Buffer[(i*8)+1]);
                 errId := (FT_In_Buffer[(i*8)+2]);
                 Self.WriteError(3000+errId, FErrAddress);
-                Self.LogWrite(llError, 'Chyba '+intToStr(errId)+ ' modulu '+IntToStr(FErrAddress)+': '+Self.GetErrString(errId));
+                Self.LogWrite(llError, 'Chyba '+intToStr(errId)+ ' modulu '+IntToStr(FErrAddress)+': '+Self.GetErrString(3000+errId));
                 case errId of
                   141:begin // modul nekomunikuje
                     FModule[FErrAddress].revived := False;
