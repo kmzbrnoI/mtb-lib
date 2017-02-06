@@ -196,9 +196,9 @@ begin
      end;
    end;
 
- Self.Caption := Self.Caption+'        v'+Version.GetLibVersion();
- Self.PC_Main.ActivePageIndex := 0;
- Self.CB_LogLevel.ItemIndex := Integer(MTBdrv.LogLevel);
+  Self.Caption := Self.Caption+'        v'+Version.GetLibVersion();
+  Self.PC_Main.ActivePageIndex := 0;
+  Self.CB_LogLevel.ItemIndex := Integer(MTBdrv.LogLevel);
 end;
 
 procedure TFormConfig.LV_LogCustomDrawItem(Sender: TCustomListView;
@@ -244,10 +244,29 @@ begin
 end;
 
 procedure TFormConfig.BeforeOpen(Sender:TObject);
+var i:Integer;
 begin
  Self.l_modcount.Caption := 'hledám...';
  Self.L_Openned.Caption := 'otevírám...';
  Self.L_Openned.Font.Color := clSilver;
+
+ // set MTB board to ComboBox
+ cb_mtbName.ItemIndex := -1;
+ for i := 0 to cb_mtbName.Items.Count-1 do
+  begin
+   if (cb_mtbName.Items.Strings[i] = MTBdrv.UsbSerial) then
+    begin
+     cb_mtbName.ItemIndex := i;
+     Break;
+    end;
+  end;
+
+ if (cb_mtbName.ItemIndex = -1) then
+  begin
+   // new device -> add to list
+   cb_mtbName.Items.Add(MTBdrv.UsbSerial);
+   cb_mtbName.ItemIndex := 0;
+  end;
 
  Self.cb_speed.Enabled   := false;
  Self.cb_mtbName.Enabled := false;
