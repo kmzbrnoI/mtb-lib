@@ -1424,7 +1424,7 @@ begin
               _ERR_CODE: begin
                 FErrAddress := (FT_In_Buffer[(i*8)+1]);
                 errId := (FT_In_Buffer[(i*8)+2]);
-                Self.WriteError(errId, FErrAddress);
+                Self.WriteError(3000+errId, FErrAddress);
                 Self.LogWrite(llError, 'Chyba '+intToStr(errId)+ ' modulu '+IntToStr(FErrAddress)+': '+Self.GetErrString(errId));
                 case errId of
                   141:begin // modul nekomunikuje
@@ -1542,9 +1542,8 @@ begin
                      2:errId := 103;
                     else errId := 200;
                   end;
+                  Self.WriteError(3000+errId, FErrAddress);
                 end;
-
-                Self.WriteError(3000+errId, FErrAddress);
               end;
             end; // case
           end else begin
