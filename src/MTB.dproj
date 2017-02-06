@@ -2,7 +2,7 @@
 		<PropertyGroup>
 			<ProjectGuid>{55FAF7AE-6D15-4D2F-A321-A54ED7690D86}</ProjectGuid>
 			<MainSource>MTB.dpr</MainSource>
-			<Config Condition="'$(Config)'==''">Debug</Config>
+			<Config Condition="'$(Config)'==''">Release</Config>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 			<ProjectVersion>12.0</ProjectVersion>
 		</PropertyGroup>
