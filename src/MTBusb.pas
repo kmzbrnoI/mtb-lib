@@ -245,7 +245,7 @@ type
     FOverChanged  : Boolean;    // zmena vstupu REG - pretizeni
     FInputChanged : Boolean;    // zmena vstupu IO - UNI/TTL
 
-    FModuleCount: byte;       // pocet nalezenych modulu na sbernici
+    FModuleCount: Cardinal;       // pocet nalezenych modulu na sbernici
     FScan_flag: boolean;
     FSeznam_flag: boolean;
     FDataInputErr: Boolean;  // chyba posledniho byte paketu
@@ -405,7 +405,7 @@ type
 
     procedure CheckAllScannedEvent();
 
-    property ModuleCount: byte read FModuleCount;
+    property ModuleCount: Cardinal read FModuleCount;
     property Openned: boolean read FOpenned;
     property Scanning: boolean read FScanning;
     property ErrAddres: byte read FErrAddress;
@@ -1162,6 +1162,14 @@ begin
 
           case (FT_In_Buffer[0]) and $F0 of
             _MTB_ID: begin
+              if (FModuleCount = 256) then begin
+                // something went wrong
+                FModuleCount := 0;
+                WriteError(MTB_INVALID_MODULES_COUNT, _DEFAULT_ERR_ADDR);
+                LogWrite(llError, 'MTB-USB deska odpovídá opakovaným nalezením modulù!');
+                Self.Close();
+              end;
+
               Inc(FModuleCount);
               adresa := FT_In_Buffer[1];
               FModule[adresa].ID := FT_In_Buffer[2];
@@ -1689,8 +1697,17 @@ begin
       Self.LogWrite(llError, 'EXCEPTION (mtbScan): '+e.ClassName+' - '+e.Message);
       Self.WriteError(MTB_FT_EXCEPTION, _DEFAULT_ERR_ADDR);
       LogWrite(llError, 'FTDI výjimka!');
-      if FScanning then Stop;
-      Close;
+      try
+        if FScanning then Stop;
+      except
+
+      end;
+
+      try
+        Close
+      except
+
+      end;
     end;
    on e:Exception do
      Self.LogWrite(llError, 'EXCEPTION (mtbScan): '+e.ClassName+' - '+e.Message);
@@ -1779,9 +1796,12 @@ begin
   Close_USB_Device;
   FTimer.Enabled := false;
   FOpenned := false;
+  FScanning := false;
+  FWaitingOnScan := false;
   LogWrite(llCmd, 'Uzavøení zaøízení');
 
   for i:= 1 to _MTB_MAX_ADDR do begin
+    FModule[i].Status := 0;
     FModule[i].CFGnum := 0;
     FModule[i].ID := 0;
     FModule[i].typ := idNone;
@@ -1930,11 +1950,19 @@ end;
 
 destructor TMTBusb.Destroy;
 begin
-  try
-    if (FScanning and FOpenned) then Self.Stop();
-    if (FOpenned) then Self.Close();
-  except
+  if (FScanning and FOpenned) then begin
+    try
+      Self.Stop();
+    except
 
+    end;
+  end;
+  if (FOpenned) then begin
+    try
+      Self.Close();
+    except
+
+    end;
   end;
 
   try
