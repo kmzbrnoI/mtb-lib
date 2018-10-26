@@ -175,12 +175,12 @@ begin
   E_nazev_desky.Text  := conf.CFGpopis;
   L_FWVersion.Caption := conf.CFGfw;
 
-  cbSCOM0.Visible := ((typ = TModulType.idMTB_UNI_ID) or (typ = TModulType.idMTB_UNIOUT_ID));
+  cbSCOM0.Visible := ((typ = TModulType.idMTB_UNI_ID) or (typ = TModulType.idMTB_UNIOUT_ID) or (typ = TModulType.idNone));
   cbSCOM1.Visible := cbSCOM0.Visible;
   cbSCOM2.Visible := cbSCOM0.Visible;
   cbSCOM3.Visible := cbSCOM0.Visible;
 
-  cbIR0.Visible := (typ = TModulType.idMTB_UNI_ID);
+  cbIR0.Visible := ((typ = TModulType.idMTB_UNI_ID) or (typ = TModulType.idNone));
   cbIR1.Visible := cbIR0.Visible;
   cbIR2.Visible := cbIR0.Visible;
   cbIR3.Visible := cbIR0.Visible;
