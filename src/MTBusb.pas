@@ -10,7 +10,7 @@
 {
    LICENSE:
 
-   Copyright 2015-2016 Petr Travnik, Michal Petrilak, Jan Horacek
+   Copyright 2015-2018Petr Travnik, Michal Petrilak, Jan Horacek
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -386,6 +386,8 @@ type
     procedure SetOutPortFlick(Port: TPortValue; state: TFlickType);
     function GetOutPortFlick(Port: TPortValue): TFlickType;
 
+    function IsIRIn(Port: TPortValue): Boolean;
+
     function IsScomOut(Port: TPortValue): Boolean;
     procedure SetScomCode(Port: TPortValue; code: byte);
     function GetScomCode(Port: TPortValue): byte;
@@ -643,6 +645,18 @@ begin
   s := s + IntToHex(FT_Out_Buffer[count+1],2);
   LogDataOut(count+2);
   Write_USB_Device_Buffer(count+2);
+end;
+
+function TMTBusb.IsIRIn(Port: TPortValue): Boolean;
+var
+  adresa : Byte;
+begin
+  Result := False;
+  adresa := GetAdrr(Port);
+  if (adresa < 1) or (adresa > 127) then Exit;
+  if not IsModule(adresa) then Exit;
+  if (GetModuleType(adresa) <> TModulType.idMTB_UNI_ID) then Exit;
+  Result := ((FModule[adresa].CFData[2] shr (GetChannel(Port) div 4)) and $1 > 0);
 end;
 
 // pokud je vystupu prirazen Scom port tak True, 15.1.2012

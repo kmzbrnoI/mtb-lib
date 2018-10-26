@@ -20,8 +20,8 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_DependencyCheckOutputName>..\output\MTB.dll</DCC_DependencyCheckOutputName>
-			<DCC_ExeOutput>..\output\</DCC_ExeOutput>
+			<DCC_DependencyCheckOutputName>..\..\..\..\Delphi\hJOPserver\output\lib-rcs\MTB.dll</DCC_DependencyCheckOutputName>
+			<DCC_ExeOutput>..\..\..\..\Delphi\hJOPserver\output\lib-rcs\</DCC_ExeOutput>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_Platform>x86</DCC_Platform>
 			<DCC_BplOutput>..\Outunit\</DCC_BplOutput>
@@ -39,6 +39,7 @@
 			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
@@ -89,6 +90,8 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+						<Parameters Name="HostApplication">D:\UsersData\Vlak\Delphi\hJOPserver\output\hJOPserver.exe</Parameters>
+						<Parameters Name="DebugCWD">D:\UsersData\Vlak\Delphi\hJOPserver\output\</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>

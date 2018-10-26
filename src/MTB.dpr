@@ -10,7 +10,7 @@
 {
    LICENSE:
 
-   Copyright 2015-2016 Petr Travnik, Michal Petrilak, Jan Horacek
+   Copyright 2015-2018 Petr Travnik, Michal Petrilak, Jan Horacek
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -371,6 +371,38 @@ begin
 end;//function
 
 ////////////////////////////////////////////////////////////////////////////////
+
+function GetInputType(module, port: Cardinal): Integer; stdcall;
+begin
+  try
+    if ((not InRange(module, Low(TAddr), High(TAddr))) or (not MTBdrv.IsModule(module))) then Exit(MTB_MODULE_INVALID_ADDR);
+    if (not InRange(port, Low(TIOchann), High(TIOchann))) then Exit(MTB_PORT_INVALID_NUMBER);
+
+    if (MTBdrv.IsIRIn(Module*16 + Port)) then
+      Result := Integer(TRCSIPortType.iptIR)
+    else
+      Result := Integer(TRCSIPortType.iptPlain);
+  except
+    Result := MTB_GENERAL_EXCEPTION;
+  end;
+end;
+
+function GetOutputType(module, port: Cardinal): Integer; stdcall;
+begin
+  try
+    if ((not InRange(module, Low(TAddr), High(TAddr))) or (not MTBdrv.IsModule(module))) then Exit(MTB_MODULE_INVALID_ADDR);
+    if (not InRange(port, Low(TIOchann), High(TIOchann))) then Exit(MTB_PORT_INVALID_NUMBER);
+
+    if (MTBdrv.IsScomOut(Module*16 + Port)) then
+      Result := Integer(TRCSOPortType.optScom)
+    else
+      Result := Integer(TRCSIPortType.iptPlain);
+  except
+    Result := MTB_GENERAL_EXCEPTION;
+  end;
+end;
+
+////////////////////////////////////////////////////////////////////////////////
 // MTB-USB board
 
 function GetDeviceCount():Integer; stdcall;
@@ -578,7 +610,7 @@ exports
   BindBeforeOpen, BindAfterOpen, BindBeforeClose, BindAfterClose,
   BindBeforeStart, BindAfterStart, BindBeforeStop, BindAfterStop,
   BindOnError, BindOnLog, BindOnInputChanged, BindOnOutputChanged,
-  BindOnScanned;
+  BindOnScanned, GetInputType, GetOutputType;
 
 
 begin

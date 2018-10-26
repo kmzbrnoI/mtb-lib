@@ -8,7 +8,7 @@
 {
    LICENSE:
 
-   Copyright 2016 Jan Horacek
+   Copyright 2016-2018 Jan Horacek
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -37,6 +37,16 @@ interface
 uses MTBusb;
 
 type
+  TRCSIPortType = (
+    iptPlain = 0,
+    iptIR = 1
+  );
+
+  TRCSOPortType = (
+    optPlain = 0,
+    optSCom = 1
+  );
+
   TCML = class
     private
       procedure MTBOnChange(Sender:TObject);
