@@ -2,7 +2,7 @@
 		<PropertyGroup>
 			<ProjectGuid>{55FAF7AE-6D15-4D2F-A321-A54ED7690D86}</ProjectGuid>
 			<MainSource>MTB.dpr</MainSource>
-			<Config Condition="'$(Config)'==''">Release</Config>
+			<Config Condition="'$(Config)'==''">Debug</Config>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 			<ProjectVersion>12.0</ProjectVersion>
 		</PropertyGroup>
@@ -20,32 +20,36 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_DependencyCheckOutputName>..\..\..\..\Delphi\hJOPserver\output\lib-rcs\MTB.dll</DCC_DependencyCheckOutputName>
-			<DCC_ExeOutput>..\..\..\..\Delphi\hJOPserver\output\lib-rcs\</DCC_ExeOutput>
-			<DCC_ImageBase>00400000</DCC_ImageBase>
-			<DCC_Platform>x86</DCC_Platform>
 			<DCC_BplOutput>..\Outunit\</DCC_BplOutput>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<DCC_DependencyCheckOutputName>..\output\MTB.dll</DCC_DependencyCheckOutputName>
+			<DCC_UsePackage>vcl;rtl;vclx;DelphiX_for7;VclSmp;vclactnband;CPortLib7;Custom</DCC_UsePackage>
+			<DCC_IOChecking>false</DCC_IOChecking>
+			<DCC_Platform>x86</DCC_Platform>
 			<DCC_RangeChecking>true</DCC_RangeChecking>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
-			<DCC_UsePackage>vcl;rtl;vclx;DelphiX_for7;VclSmp;vclactnband;CPortLib7;Custom;DLPortIO;Intellibox;Mtbp;Package1;vclshlctrls;delphivclide;direct</DCC_UsePackage>
+			<DCC_ExeOutput>..\output\</DCC_ExeOutput>
 			<DCC_N>true</DCC_N>
 			<DCC_K>false</DCC_K>
 			<GenDll>true</GenDll>
 			<DCC_S>false</DCC_S>
-			<DCC_F>false</DCC_F>
 			<DCC_DcuOutput>..\Outunit\</DCC_DcuOutput>
+			<DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
+			<DCC_F>false</DCC_F>
 			<DCC_E>false</DCC_E>
 			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
-			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_Optimize>false</DCC_Optimize>
 			<DCC_RemoteDebug>true</DCC_RemoteDebug>
+			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<ItemGroup>
@@ -89,8 +93,6 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
-						<Parameters Name="HostApplication">D:\UsersData\Vlak\Delphi\hJOPserver\output\hJOPserver.exe</Parameters>
-						<Parameters Name="DebugCWD">D:\UsersData\Vlak\Delphi\hJOPserver\output\</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
@@ -124,6 +126,7 @@
 						<Excluded_Packages Name="$(BDS)\bin\dclofficexp120.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
 					</Excluded_Packages>
 				</Delphi.Personality>
+				<ModelSupport>False</ModelSupport>
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>
 		</ProjectExtensions>
