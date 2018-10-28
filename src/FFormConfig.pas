@@ -327,7 +327,7 @@ var i, j:Integer;
 begin
  if (Application.MessageBox('Opravdu vyresetovat konfiguraci všech MTB modulù, které se nenachází v tabulce níže?', 'Opravdu', MB_YESNO OR MB_ICONQUESTION) <> mrYes) then Exit(); 
 
- for i := 1 to _MTB_MAX_ADDR do
+ for i := 1 to _ADDR_MAX_NUM do
   begin
    if (not MTBdrv.IsModule(i)) then
     begin
@@ -403,7 +403,7 @@ begin
 
  lv_modules.Color := clWindow;
 
- for i := 0 to _MTB_MAX_ADDR do
+ for i := 0 to _ADDR_MAX_NUM do
   begin
    if ((not MTBdrv.IsModule(i)) and (not CHB_ShowAllModules.Checked)) then continue;
 

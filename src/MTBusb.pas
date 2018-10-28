@@ -104,9 +104,6 @@ const
   MTB_TTL_ID     = $60;
   MTB_TTLOUT_ID  = $70;
 
-// Konstanty programu
-const _MTB_MAX_ADDR = 191;
-
 const
   _REG_ADDR = $80;    // 128..159      REG 32 adres
   _POT_ADDR = $a0;    // 160..175      POT 16 adres
@@ -117,8 +114,8 @@ const
 
 type
   // Ranges & sub-types:
-  TAddr       = 0..191;   // Rozsah povolenych adres
-  TIOaddr     = 0..191;  // Rozsah adres UNI, TTL
+  TAddr       = 0.._ADDR_MAX_NUM;   // Rozsah povolenych adres
+  TIOaddr     = 0.._ADDR_MAX_NUM;  // Rozsah adres UNI, TTL
   TIOchann    = 0..15;   // Rozsah kanalu UNI,TTL
   TregAddr    = 128..159;  // Rezsah Reg adres
   TRegChann   = 0..255;  // Rozsah kanalu regulatoru
@@ -653,7 +650,7 @@ var
 begin
   Result := False;
   adresa := GetAdrr(Port);
-  if (adresa < 1) or (adresa > 127) then Exit;
+  if (adresa < 1) or (adresa > _ADDR_MAX_NUM) then Exit;
   if not IsModule(adresa) then Exit;
   if (GetModuleType(adresa) <> TModulType.idMTB_UNI_ID) then Exit;
   Result := ((FModule[adresa].CFData[2] shr (GetChannel(Port) div 4)) and $1 > 0);
@@ -666,7 +663,7 @@ var
 begin
   Result := False;
   adresa := GetAdrr(Port);
-  if (adresa < 1) or (adresa > 127) then Exit;
+  if (adresa < 1) or (adresa > _ADDR_MAX_NUM) then Exit;
   if not IsModule(adresa) then Exit;
   if GetChannel(Port) > 7 then Exit;
   Result := FModule[adresa].Scom.ScomActive[GetChannel(Port)];
@@ -807,7 +804,7 @@ var
   adresa : word;
 begin
   adresa := Port div 16;
-  if (adresa in [1.._MTB_MAX_ADDR]) and (IsModule(adresa)) then begin
+  if (adresa in [1.._ADDR_MAX_NUM]) and (IsModule(adresa)) then begin
     if FPortOut[Port].flick <> state then begin
       FPortOut[Port].flick := state;
       FPortOut[Port].flickChange := True;
@@ -908,7 +905,7 @@ end;
 function TMTBusb.IsModule(addr: TAddr): boolean;
 begin
   Result := False;
-  if addr in [1.._MTB_MAX_ADDR] then begin
+  if addr in [1.._ADDR_MAX_NUM] then begin
     if FModule[addr].typ <> idNone then begin
       Result := True;
     end;
@@ -1207,7 +1204,6 @@ var
   port : TPortValue;
   changed: boolean;
   odpoved: boolean;
-  PortStatus: FT_Result;
   paketNum, datNum: byte;
   mdata: Array[0..7] of byte;
   potValue : TPotValue;
@@ -1659,7 +1655,7 @@ begin
       end;
 
       // odeslani pri zmene dat na vystupu
-      for i := 1 to _MTB_MAX_ADDR do begin
+      for i := 1 to _ADDR_MAX_NUM do begin
         if IsModule(i) then begin
           if FModule[i].Output.changed then begin
             case (FModule[i].ID AND $F0) of
@@ -1726,7 +1722,7 @@ begin
       FPotChanged := false;
       FOverChanged := false;
       FInputChanged := false;
-      for i := 1 to _MTB_MAX_ADDR do begin
+      for i := 1 to _ADDR_MAX_NUM do begin
         if IsModule(i) then begin
           if (FModule[i].Input.changed) then begin
             changed := true;
@@ -1806,7 +1802,7 @@ begin
   try
     // Nulovat poc. hodnoty
     FModuleCount := 0;
-    for i:= 1 to _MTB_MAX_ADDR do begin
+    for i:= 1 to _ADDR_MAX_NUM do begin
       FModule[i].CFGnum := 0;
       FModule[i].ID := 0;
       FModule[i].typ := idNone;
@@ -1868,7 +1864,7 @@ begin
   FWaitingOnScan := false;
   LogWrite(llCmd, 'Uzavøení zaøízení');
 
-  for i:= 1 to _MTB_MAX_ADDR do begin
+  for i:= 1 to _ADDR_MAX_NUM do begin
     FModule[i].Status := 0;
     FModule[i].CFGnum := 0;
     FModule[i].ID := 0;
@@ -1909,7 +1905,7 @@ begin
     Write_USB_Device_Buffer(2); // Reset XRAM
 
     // send configuration to modules
-    for i := 1 to _MTB_MAX_ADDR do begin
+    for i := 1 to _ADDR_MAX_NUM do begin
       if (FModule[i].available) then begin
         FT_Out_Buffer[0] := _MTB_SET + 7;
         FT_Out_Buffer[1] := i;
@@ -1971,7 +1967,7 @@ begin
     FScanning := false;
     FWaitingOnScan := false;
     LogWrite(llChange, 'Zastavení komunikace');
-    for i := 1 to _MTB_MAX_ADDR do begin
+    for i := 1 to _ADDR_MAX_NUM do begin
       FModule[i].Status := 0;
     end;
 
@@ -2072,7 +2068,7 @@ var ini:TMemIniFile;
 begin
  ini := TMemIniFile.Create(fn, TEncoding.UTF8);
 
- for i := 1 to _MTB_MAX_ADDR do
+ for i := 1 to _ADDR_MAX_NUM do
  begin
   name := 'Modul '+intToStr(i);
   Self.SetCfg(i, ini.ReadInteger(name, 'cfg', 0));
@@ -2093,7 +2089,7 @@ var ini:TMemIniFile;
 begin
  ini := TMemIniFile.Create(fn, TEncoding.UTF8);
 
- for i := 1 to _MTB_MAX_ADDR do
+ for i := 1 to _ADDR_MAX_NUM do
  begin
   name := 'Modul '+intToStr(i);
   ini.WriteInteger(name, 'cfg', Self.GetCfg(i));
@@ -2114,7 +2110,7 @@ end;
 procedure TMTBusb.ResetPortsStatus();
 var i, j:Integer;
 begin
-  for i := 1 to _MTB_MAX_ADDR do begin
+  for i := 1 to _ADDR_MAX_NUM do begin
     FModule[i].revived := False;
     FModule[i].failure := False;
 
@@ -2161,7 +2157,7 @@ end;
 function TMTBusb.AreAllModulesScanned(): boolean;
 var i:Integer;
 begin
-  for i := 1 to _MTB_MAX_ADDR do begin
+  for i := 1 to _ADDR_MAX_NUM do begin
     if ((IsModule(i)) and (not IsModuleFailure(i)) and
         ((not IsModuleConfigured(i)) or (not IsModuleScanned(i)))) then
      Exit(false);
