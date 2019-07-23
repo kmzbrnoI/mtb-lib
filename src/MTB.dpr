@@ -511,6 +511,43 @@ begin
  end;
 end;
 
+function GetModuleInputsCount(module:Cardinal):Cardinal;
+begin
+ if (module > MTBusb._ADDR_MAX_NUM) then
+   Exit(MTB_MODULE_INVALID_ADDR);
+
+ if (MTBdrv.IsModule(module)) then
+  begin
+   case (MTBdrv.GetModuleType(Module)) of
+    TModulType.idMTB_POT_ID: Result := High(TPotInp)+1;
+    TModulType.idMTB_UNI_ID, TModulType.idMTB_TTL_ID: Result := High(TIOchann)+1;
+   else
+    Result := 0;
+   end;
+  end else begin
+   Result := High(TIOchann)+1; // assume all modules IO
+  end;
+end;
+
+function GetModuleOutputsCount(module:Cardinal):Cardinal;
+begin
+ if (module > MTBusb._ADDR_MAX_NUM) then
+   Exit(MTB_MODULE_INVALID_ADDR);
+
+ if (MTBdrv.IsModule(module)) then
+  begin
+   case (MTBdrv.GetModuleType(Module)) of
+    TModulType.idMTB_REGP_ID: Result := High(TRegOut)+1;
+    TModulType.idMTB_UNI_ID, TModulType.idMTB_UNIOUT_ID,
+      TModulType.idMTB_TTL_ID, TModulType.idMTB_TTLOUT_ID: Result := High(TIOchann)+1;
+   else
+    Result := 0;
+   end;
+  end else begin
+   Result := High(TIOchann)+1; // assume all modules IO
+  end;
+end;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Library version functions:
 
@@ -644,7 +681,7 @@ exports
   GetInput, GetOutput, SetOutput,
   GetDeviceCount, GetDeviceSerial,
   IsModule, IsModuleFailure, GetModuleCount, GetModuleType, GetModuleName, GetModuleFW,
-  GetMaxModuleAddr,
+  GetModuleInputsCount, GetModuleOutputsCount, GetMaxModuleAddr,
   ApiSupportsVersion, ApiSetVersion, GetDeviceVersion, GetDriverVersion,
   BindBeforeOpen, BindAfterOpen, BindBeforeClose, BindAfterClose,
   BindBeforeStart, BindAfterStart, BindBeforeStop, BindAfterStop,
