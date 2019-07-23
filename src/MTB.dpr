@@ -10,7 +10,7 @@
 {
    LICENSE:
 
-   Copyright 2015-2018 Petr Travnik, Michal Petrilak, Jan Horacek
+   Copyright 2015-2019 Petr Travnik, Michal Petrilak, Jan Horacek
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -73,6 +73,11 @@ uses
   Errors in 'Errors.pas',
   LibCML in 'LibCML.pas',
   Version in 'Version.pas';
+
+const
+  API_SUPPORTED_VERSIONS: array[0..0] of Cardinal = (
+  	$0301 // v1.3
+  );
 
 {$R *.res}
 
@@ -494,6 +499,24 @@ end;
 ////////////////////////////////////////////////////////////////////////////////
 // Library version functions:
 
+function ApiSupportsVersion(version:Cardinal):Boolean; stdcall;
+var i:Integer;
+begin
+ for i := Low(API_SUPPORTED_VERSIONS) to High(API_SUPPORTED_VERSIONS) do
+   if (API_SUPPORTED_VERSIONS[i] = version) then
+     Exit(true);
+ Result := false;
+end;
+
+function ApiSetVersion(version:Cardinal):Integer; stdcall;
+begin
+ if (not ApiSupportsVersion(version)) then
+   Exit(MTB_UNSUPPORTED_API_VERSION);
+
+ CML.api_version := version;
+ Result := 0;
+end;
+
 function GetDeviceVersion(version:PChar; versionLen:Cardinal):Integer; stdcall;
 begin
  try
@@ -606,7 +629,7 @@ exports
   GetInput, GetOutput, SetOutput,
   GetDeviceCount, GetDeviceSerial,
   IsModule, IsModuleFailure, GetModuleCount, GetModuleType, GetModuleName, GetModuleFW,
-  GetDeviceVersion, GetDriverVersion,
+  ApiSupportsVersion, ApiSetVersion, GetDeviceVersion, GetDriverVersion,
   BindBeforeOpen, BindAfterOpen, BindBeforeClose, BindAfterClose,
   BindBeforeStart, BindAfterStart, BindBeforeStop, BindAfterStop,
   BindOnError, BindOnLog, BindOnInputChanged, BindOnOutputChanged,

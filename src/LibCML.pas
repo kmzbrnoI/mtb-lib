@@ -66,6 +66,8 @@ type
       procedure MTBOnScanned(Sender:TObject);
 
     public
+     api_version: Cardinal;
+
       constructor Create();
       destructor Destroy(); override;
 

@@ -93,6 +93,8 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+						<Parameters Name="HostApplication">D:\UsersData\vlak\Delphi\hJOPserver\output\hJOPserver.exe</Parameters>
+						<Parameters Name="DebugCWD">D:\UsersData\vlak\Delphi\hJOPserver\output\</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
