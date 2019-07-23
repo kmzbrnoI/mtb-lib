@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// MTB.dpr
+// mtb.dpr
 //  MTB communication library
 //  Main Library file.
 //  (c) Petr Travnik (petr.travnik@kmz-brno.cz),
@@ -34,7 +34,7 @@
 
 
 // JCL_DEBUG_EXPERT_INSERTJDBG OFF
-library MTB;
+library mtb;
 
 uses
   SysUtils,
