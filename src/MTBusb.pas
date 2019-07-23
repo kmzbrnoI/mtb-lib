@@ -1302,7 +1302,7 @@ begin
           Get_USB_Device_QueueStatus;
         end else begin // kontrola paketu
           FDataInputErr := True; // prisel chybný paket
-            LogWrite(llError, 'Chyba pøijmutého paketu: '+IntToHex(FT_In_Buffer[0],2)
+            LogWrite(llWarning, 'Chyba pøijmutého paketu: '+IntToHex(FT_In_Buffer[0],2)
                +' '+IntToHex(FT_In_Buffer[1],2)+' '+IntToHex(FT_In_Buffer[2],2)
                +' '+IntToHex(FT_In_Buffer[3],2)+' '+IntToHex(FT_In_Buffer[4],2)
                +' '+IntToHex(FT_In_Buffer[5],2)+' '+IntToHex(FT_In_Buffer[6],2)
@@ -1311,7 +1311,7 @@ begin
       end;  // while
       if FDataInputErr then begin
         FScan_flag := false;
-        LogWrite(llError, 'Chyba paketu pri scan modulu');
+        LogWrite(llWarning, 'Chyba paketu pri scan modulu');
         FOpenned := False;
         FScan_flag := False;
         Purge_USB_Device_Out;
@@ -1490,7 +1490,7 @@ begin
                 FErrAddress := (FT_In_Buffer[(i*8)+1]);
                 errId := (FT_In_Buffer[(i*8)+2]);
                 Self.WriteError(3000+errId, FErrAddress);
-                Self.LogWrite(llError, 'Chyba '+intToStr(errId)+ ' modulu '+IntToStr(FErrAddress)+': '+Self.GetErrString(3000+errId));
+                Self.LogWrite(llWarning, 'Chyba '+intToStr(errId)+ ' modulu '+IntToStr(FErrAddress)+': '+Self.GetErrString(3000+errId));
                 case errId of
                   141:begin // modul nekomunikuje
                     FModule[FErrAddress].revived := False;
@@ -1613,7 +1613,7 @@ begin
             end; // case
           end else begin
             FDataInputErr := True;
-            LogWrite(llError, 'Chyba pøijmutého paketu: '+IntToHex(FT_In_Buffer[i*8+0],2)
+            LogWrite(llWarning, 'Chyba pøijmutého paketu: '+IntToHex(FT_In_Buffer[i*8+0],2)
                +' '+IntToHex(FT_In_Buffer[i*8+1],2)+' '+IntToHex(FT_In_Buffer[i*8+2],2)
                +' '+IntToHex(FT_In_Buffer[i*8+3],2)+' '+IntToHex(FT_In_Buffer[i*8+4],2)
                +' '+IntToHex(FT_In_Buffer[i*8+5],2)+' '+IntToHex(FT_In_Buffer[i*8+6],2)
@@ -1747,7 +1747,7 @@ begin
         end;
         GetFbData;  // znovu zaslat FB data
         Self.WriteError(MTB_INVALID_PACKET, _DEFAULT_ERR_ADDR);
-        LogWrite(llError, 'Neplatný paket!');
+        LogWrite(llWarning, 'Neplatný paket!');
       end;
       if odpoved then changed := True;
       // Pøi zmìnì vyvolá událost
