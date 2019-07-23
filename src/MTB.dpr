@@ -90,6 +90,7 @@ begin
  try
   MTBdrv.LoadConfig(filename);
   MTBdrv.ConfigFn := filename;
+  FormConfig.OnConfigLoad();
   Result := 0;
  except
   on E:EIniFileException do

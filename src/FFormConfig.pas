@@ -104,6 +104,7 @@ type
   public
 
     procedure UpdateModulesList();
+    procedure OnConfigLoad();
 
   end;
 
@@ -172,6 +173,13 @@ begin
 end;
 
 procedure TFormConfig.FormCreate(Sender: TObject);
+begin
+  Self.Caption := Self.Caption+'        v'+Version.GetLibVersion();
+  Self.PC_Main.ActivePageIndex := 0;
+  Self.OnConfigLoad();
+end;
+
+procedure TFormConfig.OnConfigLoad();
 var
   i: integer;
 begin
@@ -196,8 +204,6 @@ begin
      end;
    end;
 
-  Self.Caption := Self.Caption+'        v'+Version.GetLibVersion();
-  Self.PC_Main.ActivePageIndex := 0;
   Self.CB_LogLevel.ItemIndex := Integer(MTBdrv.LogLevel);
 end;
 
