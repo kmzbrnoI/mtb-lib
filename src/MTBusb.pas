@@ -140,8 +140,8 @@ type
   ENotStarted = class(Exception);
   EInvalidScomCode = class(Exception);
 
-  TLogLevel = (llNo = 0, llError = 1, llChange = 2, llCmd = 3, llRawCmd = 4,
-    llDebug = 5);
+  TLogLevel = (llNo = 0, llError = 1, llWarning = 2, llInfo = 3, llCmd = 4, llRawCmd = 5,
+    llDebug = 6);
 
   TModulType = (idNone = $0, idMTB_POT_ID = $10, idMTB_REGP_ID = $30, idMTB_UNI_ID = $40,
         idMTB_UNIOUT_ID = $50, idMTB_TTL_ID = $60, idMTB_TTLOUT_ID = $70);
@@ -1252,7 +1252,7 @@ begin
                 else FModule[adresa].typ := idNone;
               end;
               FModule[adresa].CFGnum := FModule[adresa].ID and $0F;
-              LogWrite(llChange, 'Nalezen modul - adresa: '+ IntToStr(adresa) + ' - ' + GetModuleTypeName(adresa)
+              LogWrite(llInfo, 'Nalezen modul - adresa: '+ IntToStr(adresa) + ' - ' + GetModuleTypeName(adresa)
                  + ' FW: ' + FModule[adresa].firmware);
             end;
 
@@ -1261,7 +1261,7 @@ begin
               FScan_flag := false;
               FSeznam_flag := True;
               FOpenned := True;
-              LogWrite(llChange, 'Ukonèeno hledání modulù');
+              LogWrite(llInfo, 'Ukonèeno hledání modulù');
               if FModuleCount <> pocetModulu then begin
                 FModuleCount := 0;
                 WriteError(MTB_INVALID_MODULES_COUNT, _DEFAULT_ERR_ADDR);
@@ -1283,12 +1283,12 @@ begin
                   FHWVersion_Release := FT_In_Buffer[5];
                   FHWVersion := IntToStr(FHWVersion_Major)+'.'+IntToStr(FHWVersion_Minor)+'.'+IntToStr(FHWVersion_Release);
                   FHWVersionInt := StrToInt(Format('%d%.2d%.2d',[FHWVersion_Major, FHWVersion_Minor, FHWVersion_Release]));
-                  LogWrite(llChange, 'Verze FW: '+FHWVersion);
+                  LogWrite(llInfo, 'Verze FW: '+FHWVersion);
                 end;
                 11:begin
                   FXRamAddr := (FT_In_Buffer[3]*256)+FT_In_Buffer[4];
                   FXRamValue := FT_In_Buffer[5];
-                  LogWrite(llChange, 'XRamRD: '+IntToStr(FXRamAddr)+':'+IntToStr(FXRamValue));
+                  LogWrite(llInfo, 'XRamRD: '+IntToStr(FXRamAddr)+':'+IntToStr(FXRamValue));
                 end;
               end;
             end;
@@ -1356,7 +1356,7 @@ begin
                     FHWVersion_Minor := FT_In_Buffer[i*8+4];
                     FHWVersion_Release := FT_In_Buffer[i*8+5];
                     FHWVersion := IntToStr(FHWVersion_Major)+'.'+IntToStr(FHWVersion_Minor)+'.'+IntToStr(FHWVersion_Release);
-                    LogWrite(llChange, 'Verze FW: '+FHWVersion);
+                    LogWrite(llInfo, 'Verze FW: '+FHWVersion);
                     LogWrite(llRawCmd, '_USB_CFGQ: '+' - '+ IntToHex(FT_In_Buffer[i*8],2)+' '+ IntToHex(FT_In_Buffer[i*8+1],2)+' '+IntToHex(FT_In_Buffer[i*8+2],2)
                       +' '+IntToHex(FT_In_Buffer[i*8+3],2)+' '+IntToHex(FT_In_Buffer[i*8+4],2)+' '+IntToHex(FT_In_Buffer[i*8+5],2)
                       +' '+IntToHex(FT_In_Buffer[i*8+6],2)+' '+IntToHex(FT_In_Buffer[i*8+7],2));
@@ -1933,8 +1933,8 @@ begin
 
     FScanning := true;
     FWaitingOnScan := true;
-    LogWrite(llChange, 'Spuštìní komunikace');
-    LogWrite(llChange, 'Speed: '+ IntToStr(GetSpeedStr)+'bd     ScanInterval: ' + IntToStr(ord(ScanInterval)));
+    LogWrite(llInfo, 'Spuštìní komunikace');
+    LogWrite(llInfo, 'Speed: '+ IntToStr(GetSpeedStr)+'bd     ScanInterval: ' + IntToStr(ord(ScanInterval)));
     GetCmdNum;
 
     if (Assigned(AfterStart)) then AfterStart(Self);
@@ -1966,7 +1966,7 @@ begin
 
     FScanning := false;
     FWaitingOnScan := false;
-    LogWrite(llChange, 'Zastavení komunikace');
+    LogWrite(llInfo, 'Zastavení komunikace');
     for i := 1 to _ADDR_MAX_NUM do begin
       FModule[i].Status := 0;
     end;

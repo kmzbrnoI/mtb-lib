@@ -27,7 +27,7 @@ object FormConfig: TFormConfig
     Margins.Top = 2
     Margins.Right = 2
     Margins.Bottom = 2
-    ActivePage = TS_Modules
+    ActivePage = TS_Device
     Align = alClient
     TabOrder = 0
     object TS_Device: TTabSheet
@@ -135,7 +135,8 @@ object FormConfig: TFormConfig
         Items.Strings = (
           'Nic'
           'Chyby'
-          'Zm'#283'ny stav'#367
+          'Varov'#225'n'#237
+          'Z'#225'kladn'#237' informace'
           'P'#345#237'kazy'
           'Raw data'
           'Debug')

@@ -211,8 +211,9 @@ begin
   begin
    try
      logLevel := TLogLevel(ord(Item.SubItems.Strings[0][1]) - ord('0'));
-     if (logLevel = MTBusb.llError) then (Sender as TCustomListView).Canvas.Brush.Color := $DDDDFF
-     else if (logLevel = MTBusb.llChange) then (Sender as TCustomListView).Canvas.Brush.Color := $FFEEEE
+     if (logLevel = MTBusb.llError) then (Sender as TCustomListView).Canvas.Brush.Color := $E0E0FF
+     else if (logLevel = MTBusb.llWarning) then (Sender as TCustomListView).Canvas.Brush.Color := $A0FFFF
+     else if (logLevel = MTBusb.llInfo) then (Sender as TCustomListView).Canvas.Brush.Color := $FFEEEE
      else if (logLevel = MTBusb.llCmd) then (Sender as TCustomListView).Canvas.Brush.Color := $EEFFEE;
    except
 
@@ -358,11 +359,12 @@ begin
  LI := Self.LV_Log.Items.Insert(0);
  LI.Caption := timeStr;
  case (logLevel) of
-  llError  : LI.SubItems.Add('1: Error');
-  llChange : LI.SubItems.Add('2: Zmìna');
-  llCmd    : LI.SubItems.Add('3: Pøíkaz');
-  llRawCmd : LI.SubItems.Add('4: RAW');
-  llDebug  : LI.SubItems.Add('5: Debug');
+  llError   : LI.SubItems.Add('1: Error');
+  llWarning : LI.SubItems.Add('2: Varování');
+  llInfo    : LI.SubItems.Add('3: Info');
+  llCmd     : LI.SubItems.Add('4: Pøíkaz');
+  llRawCmd  : LI.SubItems.Add('5: RAW');
+  llDebug   : LI.SubItems.Add('6: Debug');
  else
   LI.SubItems.Add('');
  end;
