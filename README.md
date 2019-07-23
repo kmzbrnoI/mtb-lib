@@ -1,9 +1,11 @@
-MTB communications library
-==========================
+MTB communication library
+=========================
 
 MTB library is used to set and get state of [MTB modules](http://mtb.kmz-brno.cz)
-on model railroad via simple dll interface. It supports MTB-UNI and MTB-TTL
-modules with firmware 4.1.
+on model railroad via [simple dll interface](https://github.com/kmzbrnoI/mtb-lib/wiki/api-specs).
+It supports MTB-UNI and MTB-TTL modules with firmware 4.1.
+
+This library is used as part of the [RCS project](https://hjop.kmz-brno.cz/rcs).
 
 ## Description
 
