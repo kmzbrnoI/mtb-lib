@@ -204,7 +204,7 @@ end;
 ////////////////////////////////////////////////////////////////////////////////
 
 initialization
-  MTBDrv := TMTBusb.Create(nil, 'mtb');
+  MTBDrv := TMTBusb.Create(nil, 'mtb\mtbcfg.ini');
   CML := TCML.Create();
 
 finalization

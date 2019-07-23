@@ -10,7 +10,7 @@
 {
    LICENSE:
 
-   Copyright 2015-2018Petr Travnik, Michal Petrilak, Jan Horacek
+   Copyright 2015-2019 Petr Travnik, Michal Petrilak, Jan Horacek
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -54,7 +54,6 @@ const
   _PORTOVER_MAX_NUM = 255;    // 32*8-1;
   _DEFAULT_USB_NAME = 'MTB03001';
   _DEFAULT_ERR_ADDR = 255;
-  _CONFIG_FN = 'mtbcfg.ini';
 
 // konstanty pro MTB-USB modul
 const
@@ -228,7 +227,7 @@ type
     FTimer: TTimer;
     FSpeed: TMtbSpeed;
     FScanInterval: TTimerInterval;
-    FMyDir : String;
+    FConfigFn : String;
     FOpenned: boolean;
     FScanning: boolean;
     FusbName: String;
@@ -324,7 +323,7 @@ type
     WrCfgData: TModulConfigSet;
     RdCfgdata: TModulConfigGet;
 
-    constructor Create(AOwner: TComponent; MyDir:string); reintroduce;
+    constructor Create(AOwner: TComponent; ConfigFn:string); reintroduce;
     destructor Destroy; override;
 
     function GetDeviceCount: Integer;
@@ -428,6 +427,7 @@ type
     property ModuleStatus[addr : TAddr]: byte read GetModuleStatus;
     property RegOver[chann : TRegChann]: TPortRegOver read GetRegOverValue;
     property LogLevel: TLogLevel read FLogLevel write FLogLevel;
+    property ConfigFn: string read FConfigFn write FConfigFn;
 
   published
 
@@ -1981,7 +1981,7 @@ begin
   end;
 end;
 
-constructor TMTBusb.Create(AOwner: TComponent; MyDir:string);
+constructor TMTBusb.Create(AOwner: TComponent; ConfigFn:string);
 begin
   inherited Create(AOwner);
 
@@ -2001,11 +2001,10 @@ begin
   FTimer.OnTimer := MtbScan;
   FTimer.SetSubComponent(True);
 
-  FMyDir := MyDir;
-  CreateDir(MyDir);
+  FConfigFn := ConfigFn;
 
   try
-    Self.LoadConfig(FMyDir+'/'+_CONFIG_FN);
+    Self.LoadConfig(FConfigFn);
   except
     on E:Exception do
       Self.LogWrite(llError, 'Nelze naèíst konfiguraci : ' + E.Message);
@@ -2030,7 +2029,7 @@ begin
   end;
 
   try
-    Self.SaveConfig(FMyDir+'\'+_CONFIG_FN);
+    Self.SaveConfig(Self.FConfigFn);
   except
     on E:Exception do
       Self.LogWrite(llError, 'Nelze uložit konfiguraci : ' + E.Message);

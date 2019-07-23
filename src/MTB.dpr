@@ -89,6 +89,7 @@ function LoadConfig(filename:PChar):Integer; stdcall;
 begin
  try
   MTBdrv.LoadConfig(filename);
+  MTBdrv.ConfigFn := filename;
   Result := 0;
  except
   on E:EIniFileException do
@@ -108,6 +109,15 @@ begin
     Result := MTB_FILE_CANNOT_ACCESS;
   on E:Exception do
     Result := MTB_GENERAL_EXCEPTION;
+ end;
+end;
+
+procedure SetConfigFileName(filename:PChar);
+begin
+ try
+   MTBdrv.ConfigFn := filename;
+ except
+
  end;
 end;
 
@@ -464,6 +474,11 @@ begin
  end;
 end;
 
+function GetMaxModuleAddr():Cardinal;
+begin
+ Result := MTBusb._ADDR_MAX_NUM;
+end;
+
 function GetModuleType(module:Cardinal):Integer; stdcall;
 begin
  try
@@ -622,13 +637,14 @@ end;
 // Dll exported functions:
 
 exports
-  LoadConfig, SaveConfig,
+  LoadConfig, SaveConfig, SetConfigFileName,
   SetLogLevel, GetLogLevel,
   ShowConfigDialog, HideConfigDialog,
   Open, OpenDevice, Close, Opened, Start, Stop, Started,
   GetInput, GetOutput, SetOutput,
   GetDeviceCount, GetDeviceSerial,
   IsModule, IsModuleFailure, GetModuleCount, GetModuleType, GetModuleName, GetModuleFW,
+  GetMaxModuleAddr,
   ApiSupportsVersion, ApiSetVersion, GetDeviceVersion, GetDriverVersion,
   BindBeforeOpen, BindAfterOpen, BindBeforeClose, BindAfterClose,
   BindBeforeStart, BindAfterStart, BindBeforeStop, BindAfterStop,
