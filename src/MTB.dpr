@@ -66,6 +66,9 @@ const
 
 function LoadConfig(filename:PChar):Integer; stdcall;
 begin
+ if (MTBdrv.Openned or MTBdrv.OpeningScanning) then
+   Exit(MTB_FILE_DEVICE_OPENED);
+
  try
   MTBdrv.LoadConfig(filename);
   MTBdrv.ConfigFn := filename;
