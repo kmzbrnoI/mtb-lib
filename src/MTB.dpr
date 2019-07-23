@@ -92,7 +92,7 @@ begin
  end;
 end;
 
-procedure SetConfigFileName(filename:PChar);
+procedure SetConfigFileName(filename:PChar); stdcall;
 begin
  try
    MTBdrv.ConfigFn := filename;
@@ -454,7 +454,7 @@ begin
  end;
 end;
 
-function GetMaxModuleAddr():Cardinal;
+function GetMaxModuleAddr():Cardinal; stdcall;
 begin
  Result := MTBusb._ADDR_MAX_NUM;
 end;
@@ -491,7 +491,7 @@ begin
  end;
 end;
 
-function GetModuleInputsCount(module:Cardinal):Cardinal;
+function GetModuleInputsCount(module:Cardinal):Cardinal; stdcall;
 begin
  if (module > MTBusb._ADDR_MAX_NUM) then
    Exit(MTB_MODULE_INVALID_ADDR);
@@ -509,7 +509,7 @@ begin
   end;
 end;
 
-function GetModuleOutputsCount(module:Cardinal):Cardinal;
+function GetModuleOutputsCount(module:Cardinal):Cardinal; stdcall;
 begin
  if (module > MTBusb._ADDR_MAX_NUM) then
    Exit(MTB_MODULE_INVALID_ADDR);
