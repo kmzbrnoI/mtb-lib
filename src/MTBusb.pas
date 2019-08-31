@@ -1768,7 +1768,7 @@ begin
       end;
 
       try
-        Close
+        if FOpenned then Close;
       except
 
       end;
