@@ -35,4 +35,4 @@ See [project wiki](https://github.com/kmzbrnoI/mtb-lib/wiki) for more informatio
 
 This software is distributed as open source under Apache License v2.0.
 
-See <`src/MTB.dpr`> for further information.
+See `<src/MTB.dpr>` for further information.
