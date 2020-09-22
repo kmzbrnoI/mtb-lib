@@ -350,6 +350,7 @@ begin
              if (MTBdrv.IsScomOut((module shl 4) or (port))) then
               begin
                //pokud je port SCom
+               if ((state < 0) or (state > 255)) then Exit(MTB_INVALID_SCOM_CODE);
                MTBdrv.SetScomCode((module shl 4) or (port), State);
               end else begin//SCom
                //pokud port neni SCom

@@ -1,4 +1,4 @@
-	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
 			<ProjectGuid>{55FAF7AE-6D15-4D2F-A321-A54ED7690D86}</ProjectGuid>
 			<MainSource>mtb.dpr</MainSource>
@@ -22,7 +22,7 @@
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<DCC_BplOutput>..\Outunit\</DCC_BplOutput>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
-			<DCC_DependencyCheckOutputName>..\output\mtb.dll</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>..\output\MTB.dll</DCC_DependencyCheckOutputName>
 			<DCC_UsePackage>vcl;rtl;vclx;DelphiX_for7;VclSmp;vclactnband;CPortLib7;Custom</DCC_UsePackage>
 			<DCC_IOChecking>false</DCC_IOChecking>
 			<DCC_Platform>x86</DCC_Platform>
@@ -101,7 +101,7 @@
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">3</VersionInfo>
 						<VersionInfo Name="MinorVer">2</VersionInfo>
-						<VersionInfo Name="Release">1</VersionInfo>
+						<VersionInfo Name="Release">3</VersionInfo>
 						<VersionInfo Name="Build">0</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
@@ -114,7 +114,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Michal Petrilak, Jan Horacek, Petr Travnik</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">Knihovna pro komukaci se systemem MTB</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">3.2.1.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">3.2.3.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">MTB knihovna</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright">KMZ Brno I</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks"/>

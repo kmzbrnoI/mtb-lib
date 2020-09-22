@@ -138,7 +138,6 @@ type
   EOpeningNotFinished = class(Exception);
   ENoModules = class(Exception);
   ENotStarted = class(Exception);
-  EInvalidScomCode = class(Exception);
 
   TLogLevel = (llNo = 0, llError = 1, llWarning = 2, llInfo = 3, llCmd = 4, llRawCmd = 5,
     llDebug = 6);
@@ -673,12 +672,7 @@ end;
 procedure TMTBusb.SetScomCode(Port: TPortValue; code: byte);
 begin
   if not IsScomOut(Port) then Exit;
-  if code > 15 then begin
-    FModule[GetAdrr(Port)].Scom.ScomCode[GetChannel(Port)] := 0;
-    raise EInvalidScomCode.Create('Scom code must be between 0 and 15');
-  end else begin
-    FModule[GetAdrr(Port)].Scom.ScomCode[GetChannel(Port)] := code;
-  end;
+  FModule[GetAdrr(Port)].Scom.ScomCode[GetChannel(Port)] := code;
   FModule[GetAdrr(Port)].Scom.changed[GetChannel(Port)] := True;
 end;
 
