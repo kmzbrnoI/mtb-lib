@@ -318,7 +318,6 @@ begin
     if (not InRange(port, Low(TIOchann), High(TIOchann))) then Exit(MTB_PORT_INVALID_NUMBER);
 
     MTBport := Module*16 + Port;
-    Result := 0;
     if (MTBdrv.IsScomOut(MTBport)) then
       Result := MTBdrv.GetScomCode(MTBport)
     else begin
