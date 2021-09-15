@@ -1,7 +1,13 @@
-MTB communication library
-=========================
+MTB v2 communication library
+============================
 
-MTB library is used to set and get state of [MTB modules](http://mtb.kmz-brno.cz)
+---
+
+**This library is deprecated as MTB v2 was replaced with MTB v4.**
+
+---
+
+MTB library is used to set and get state of [MTB v2 modules](https://mtb.kmz-brno.cz/cz/v2/index)
 on model railroad via
 [simple `dll` interface](https://github.com/kmzbrnoI/mtb-lib/wiki/api-specs).
 It supports MTB-UNI and MTB-TTL modules with firmware 4.1.
